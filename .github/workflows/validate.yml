@@ -1,4 +1,4 @@
-name: Validate apps and packages
+name: Validate
 
 on: [pull_request]
 
@@ -49,14 +49,10 @@ jobs:
           SKIP_YARN_COREPACK_CHECK: "1"
       - name: Enable corepack
         run: corepack enable
-      - name: Start docker container
-        run: ./dev/up
       - name: Install dependencies
         run: yarn
       - name: Run tests
         run: yarn test
-      - name: Stop docker container
-        run: ./dev/down
 
   typecheck:
     runs-on: ubuntu-latest

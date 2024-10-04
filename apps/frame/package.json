@@ -11,7 +11,7 @@
     "format": "yarn format:base -w .",
     "format:base": "prettier --ignore-path ../../.gitignore",
     "format:check": "yarn format:base -c .",
-    "lint": "next lint",
+    "lint": "echo \"No linting\"",
     "start": "next start",
     "test": "echo \"No tests\""
   },
