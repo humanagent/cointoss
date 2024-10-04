@@ -3579,9 +3579,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cointoss-bot@workspace:packages/bot":
+"cointoss-bot@workspace:apps/bot":
   version: 0.0.0-use.local
-  resolution: "cointoss-bot@workspace:packages/bot"
+  resolution: "cointoss-bot@workspace:apps/bot"
   dependencies:
     "@redis/client": "npm:^1.6.0"
     "@types/node": "npm:^20.14.2"
@@ -3599,9 +3599,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"cointoss-contracts@workspace:packages/contracts":
+"cointoss-contracts@workspace:contracts/cointoss":
   version: 0.0.0-use.local
-  resolution: "cointoss-contracts@workspace:packages/contracts"
+  resolution: "cointoss-contracts@workspace:contracts/cointoss"
   dependencies:
     "@nomicfoundation/hardhat-toolbox": "npm:^5.0.0"
     "@openzeppelin/contracts": "npm:^5.0.2"
