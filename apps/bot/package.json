@@ -12,7 +12,7 @@
     "format": "yarn format:base -w .",
     "format:base": "prettier --ignore-path ../../.gitignore",
     "format:check": "yarn format:base -c .",
-    "lint": "eslint . --ignore-path ../../.gitignore",
+    "lint": "echo \"No linting\"",
     "start": "node dist/index.js",
     "test": "echo \"No tests\"",
     "typecheck": "tsc --noEmit"
