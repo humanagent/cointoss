@@ -11,7 +11,7 @@ To learn more about the contents of this repository, see this README and the REA
 - [`bot`](https://github.com/ephemeraHQ/cointoss/tree/main/packages/bot): The Cointoss bot
 - [`contracts`](https://github.com/ephemeraHQ/cointoss/tree/main/packages/contracts): The Cointoss contracts
 
-### Apps
+### Apps1
 
 - [`frame`](https://github.com/ephemeraHQ/cointoss/tree/main/apps/frame): The Cointoss frame
 
