@@ -1,4 +1,4 @@
-# Cointoss
+# Cointoss test
 
 This is the official repository for Cointoss, powered by [Turborepo](https://turbo.build/repo).
 
