@@ -1,4 +1,4 @@
-# Cointoss
+# Cointoss test
 
 This is the official repository for Cointoss, powered by [Turborepo](https://turbo.build/repo).
 
@@ -6,13 +6,13 @@ To learn more about the contents of this repository, see this README and the REA
 
 ## What's inside?
 
-### Packages
+### Contracts
 
-- [`bot`](https://github.com/ephemeraHQ/cointoss/tree/main/packages/bot): The Cointoss bot
 - [`contracts`](https://github.com/ephemeraHQ/cointoss/tree/main/packages/contracts): The Cointoss contracts
 
 ### Apps
 
+- [`bot`](https://github.com/ephemeraHQ/cointoss/tree/main/packages/bot): The Cointoss bot
 - [`frame`](https://github.com/ephemeraHQ/cointoss/tree/main/apps/frame): The Cointoss frame
 
 ## Contributing
