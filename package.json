@@ -3,19 +3,24 @@
   "private": true,
   "scripts": {
     "build": "turbo build",
+    "clean": "turbo clean && rm -rf node_modules && rm -rf .turbo && yarn cache clean",
     "dev": "turbo dev",
-    "lint": "turbo lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "format": "turbo format",
+    "format:check": "turbo format:check",
+    "lint": "FORCE_COLOR=1 turbo lint",
+    "test": "FORCE_COLOR=1 turbo test",
+    "typecheck": "FORCE_COLOR=1 turbo typecheck"
   },
   "devDependencies": {
     "prettier": "^3.2.5",
+    "prettier-plugin-packagejson": "^2.5.2",
     "turbo": "^2.1.3",
     "typescript": "^5.4.5"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
-  "packageManager": "yarn@3.4.1",
+  "packageManager": "yarn@4.5.0",
   "workspaces": [
     "apps/*",
     "packages/*"

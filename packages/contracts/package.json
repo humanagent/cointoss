@@ -1,0 +1,21 @@
+{
+  "name": "cointoss-contracts",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "format": "yarn format:base -w .",
+    "format:base": "prettier --ignore-path ../../.gitignore",
+    "format:check": "yarn format:base -c .",
+    "test": "echo \"No tests\"",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.2"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "hardhat": "^2.22.7",
+    "prettier": "^3.3.3",
+    "prettier-plugin-packagejson": "^2.5.2"
+  }
+}
