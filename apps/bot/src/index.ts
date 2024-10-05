@@ -17,6 +17,7 @@ import { commands } from "./commands.js";
 import { createPublicClient, http } from "viem";
 import { base } from "viem/chains";
 import { db } from "./lib/db.js";
+import { TAG_NAME } from "./lib/constants.js";
 
 import { COINTOSSBOT_ABI } from "./abi/index.js";
 import { handleTossCreation } from "./handlers/toss.js";
@@ -32,7 +33,6 @@ const handleBetList = async (context: HandlerContext) => {
   const {
     message: { sender },
   } = context;
-
   await context.send(TOSS_LIST_REPLY);
 
   const publicClient = createPublicClient({ chain: base, transport: http() });
@@ -88,13 +88,9 @@ run(
       getCacheCreationDate,
     } = context;
 
+    console.log(TAG_NAME);
     const cacheCreationDate = await getCacheCreationDate();
     if (typeId == "new_group") {
-      console.log(
-        "cacheCreationDate",
-        cacheCreationDate,
-        new Date(group?.createdAt!),
-      );
       if (
         cacheCreationDate &&
         cacheCreationDate <= new Date(group?.createdAt!)
@@ -110,10 +106,11 @@ run(
       return; //important
     } else if (
       typeId === "text" &&
-      (content.content.includes("@cointoss") ||
+      (content.content.includes(TAG_NAME) ||
         content.content.includes("🪙") ||
         content.content.includes("💰"))
     ) {
+      console.log("mention", content.content);
       await handleText(context);
       return;
     } else if (group) {
@@ -129,7 +126,7 @@ run(
           await handleReaction(context);
           return;
         }
-      }
+      } else return;
     }
 
     const { content: text, params } = content;

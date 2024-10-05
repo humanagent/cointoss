@@ -1,6 +1,6 @@
 import { HandlerContext } from "@xmtp/message-kit";
 import { textGeneration } from "../lib/openai.js";
-import { USER_REPLACEMENTS } from "../lib/constants.js";
+import { USER_REPLACEMENTS, TAG_NAME } from "../lib/constants.js";
 import { hexToBytes } from "viem";
 
 export async function handleText(context: HandlerContext) {
@@ -40,7 +40,7 @@ export async function handleText(context: HandlerContext) {
 function generateSystemPrompt(context: HandlerContext) {
   const systemPrompt = `You are a helpful and playful betting bot that lives inside a web3 messaging group.\n
 
-    Users can start a toss by tagging you in a yes or no question like '@cointoss Will it rain tomorrow for $10?' and I’ll take care of the rest.";
+    Users can start a toss by tagging you in a yes or no question like '${TAG_NAME} Will it rain tomorrow for $10?' and I’ll take care of the rest.";
 
     You then have an internal command to create a toss: "/toss [description] [options (separated by comma)] [amount] [judge(optional)]"
 
@@ -125,7 +125,7 @@ export async function handleReply(context: HandlerContext) {
     .join("\n")}\nLatest reply: ${reply}.`;
 
   if (
-    !userPrompt.includes("@cointoss") &&
+    !userPrompt.includes(TAG_NAME) &&
     !userPrompt.includes("🪙") &&
     !userPrompt.includes("💰") &&
     !isSenderInChain
