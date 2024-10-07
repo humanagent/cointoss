@@ -22,7 +22,6 @@ export async function handleText(context: HandlerContext) {
     Object.entries(USER_REPLACEMENTS).forEach(([user, address]) => {
       userPrompt = userPrompt.replace(user, address);
     });
-    hexToBytes;
 
     if (process?.env?.MSG_LOG === "true") {
       console.log("userPrompt", userPrompt);
@@ -30,7 +29,7 @@ export async function handleText(context: HandlerContext) {
 
     const { reply } = await textGeneration(userPrompt, systemPrompt);
     console.log("reply", reply);
-    context.intent(reply);
+    await context.intent(reply);
   } catch (error) {
     console.error("Error during OpenAI call:", error);
     await context.reply("An error occurred while processing your request.");

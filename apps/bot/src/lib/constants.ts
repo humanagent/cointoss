@@ -3,12 +3,12 @@ dotenv.config();
 
 // ...
 
-export const TAG_NAME =
+export const TAG_NAME = "@cointoss"; /*
   process.env.RAILWAY_SERVICE_ID === "d63a747d-63a3-42bb-9e05-3d1b4300e289"
     ? "@cointoss"
     : process.env.RAILWAY_SERVICE_ID === "e36a4d7b-52f5-431a-9554-9235298f782b"
       ? "@ctdev"
-      : "@ctlocal";
+      : "@ctlocal";*/
 export const TOSS_MESSAGE_REPLY =
   "Hi, if you want to create a new bet send me a message saying “/toss create” and follow all the steps that I list.";
 export const TOSS_CREATE_REPLY =
