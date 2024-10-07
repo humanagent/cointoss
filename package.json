@@ -9,6 +9,8 @@
     "build": "turbo build",
     "clean": "turbo clean && rm -rf node_modules && rm -rf .turbo && yarn cache clean",
     "dev": "turbo dev",
+    "dev:bot": "cd apps/bot && yarn dev",
+    "dev:frame": "cd apps/frame && yarn dev",
     "format": "turbo format",
     "format:check": "turbo format:check",
     "lint": "FORCE_COLOR=1 turbo lint",

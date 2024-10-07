@@ -8,8 +8,8 @@ export async function generateMetadata(): Promise<Metadata> {
       ...(await fetchMetadata(
         new URL(
           "/frames",
-          process.env.VERCEL_URL
-            ? `https://${process.env.VERCEL_URL}`
+          process.env.FRAME_URL
+            ? `https://${process.env.FRAME_URL}`
             : "http://localhost:3000",
         ),
       )),

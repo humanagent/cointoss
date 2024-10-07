@@ -25,15 +25,52 @@ export async function textGeneration(userPrompt: string, systemPrompt: string) {
       content: reply || "No response from OpenAI.",
     });
     const cleanedReply = reply
-      ?.replace(/(\*\*|__)(.*?)\1/g, "$2") // Remove bold
-      ?.replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$2") // Keep URL instead of link text
-      ?.replace(/^#+\s*(.*)$/gm, "$1") // Remove titles
-      ?.replace(/`([^`]+)`/g, "$1") // Remove inline code
-      ?.replace(/^`|`$/g, ""); // Remove `````` code
+      ?.replace(/(\*\*|__)(.*?)\1/g, "$2")
+      ?.replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$2")
+      ?.replace(/^#+\s*(.*)$/gm, "$1")
+      ?.replace(/`([^`]+)`/g, "$1")
+      ?.replace(/^`|`$/g, "");
 
     return { reply: cleanedReply as string, history: messages };
   } catch (error) {
     console.error("Failed to fetch from OpenAI:", error);
+    throw error;
+  }
+}
+
+// New method to interpret an image
+export async function vision(imageData: Uint8Array, systemPrompt: string) {
+  const base64Image = Buffer.from(imageData).toString("base64");
+  const dataUrl = `data:image/jpeg;base64,${base64Image}`;
+
+  // Create a new thread for each vision request
+  const visionMessages = [
+    {
+      role: "system",
+      content: systemPrompt,
+    },
+    {
+      role: "user",
+      content: [
+        { type: "text", text: systemPrompt },
+        {
+          type: "image_url",
+          image_url: {
+            url: dataUrl,
+          },
+        },
+      ],
+    },
+  ];
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: visionMessages as any,
+    });
+    return response.choices[0].message.content;
+  } catch (error) {
+    console.error("Failed to interpret image with OpenAI:", error);
     throw error;
   }
 }
