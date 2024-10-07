@@ -8,18 +8,13 @@ import {
   TOSS_OPTIONS_REPLY,
   TOSS_CREATE_REPLY,
   TOSS_AMOUNT_JUDGE_REPLY,
-  TOSS_LIST_REPLY,
   GROUP_MESSAGE_INITIAL,
-  NO_PENDING_BETS_ERROR,
 } from "./lib/constants.js";
 import { createToss } from "./handlers/toss.js";
-import { createPublicClient, http } from "viem";
-import { base } from "viem/chains";
 import { TAG_NAME } from "./lib/constants.js";
-import { COINTOSSBOT_ABI } from "./abi/index.js";
 import { handleTossCreation, handleBetList } from "./handlers/toss.js";
 import { handleReaction, handleText, handleReply } from "./handlers/agent.js";
-// track conversation steps
+
 const inMemoryCacheStep = new Map<string, CurrentStep>();
 
 // Example usage
@@ -82,20 +77,17 @@ run(async (context: HandlerContext) => {
   }
 
   //v2
-  /*
+
   const { content: text, params } = content;
+  const stopMessages = ["stop", "cancel", "exit", "quit", "restart", "reset"];
   const textLower = text.toLowerCase();
-  if (isStopMessage(textLower)) {
-    const stopMessages = ["stop", "cancel", "exit", "quit", "restart", "reset"];
-  return stopMessages.includes(message.toLowerCase());
-    
+  if (stopMessages.includes(textLower)) {
+    inMemoryCacheStep.delete(sender.address);
+    await context.send("Steps reseted");
+    return;
   }
 
-  //Return if it's a group message
-  else if (group || (typeId !== "text" && typeId !== "reply")) return;
-  console.log("pasa");
   let contentText = content.content ?? content;
-
   const currentStep = inMemoryCacheStep.get(sender.address);
   if (!currentStep) {
     await context.send(TOSS_MESSAGE_REPLY);
@@ -137,5 +129,5 @@ run(async (context: HandlerContext) => {
       sender.address,
     );
     inMemoryCacheStep.delete(sender.address);
-  }*/
+  }
 });

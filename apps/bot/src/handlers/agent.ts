@@ -23,9 +23,7 @@ export async function handleText(context: HandlerContext) {
       userPrompt = userPrompt.replace(user, address);
     });
 
-    if (process?.env?.MSG_LOG === "true") {
-      console.log("userPrompt", userPrompt);
-    }
+    console.log("userPrompt", userPrompt);
 
     const { reply } = await textGeneration(userPrompt, systemPrompt);
     console.log("reply", reply);
@@ -91,9 +89,8 @@ export async function handleReaction(context: HandlerContext) {
       userPrompt = userPrompt.replace(user, address);
     });
 
-    if (process?.env?.MSG_LOG === "true") {
-      console.log("userPrompt", userPrompt);
-    }
+    console.log("userPrompt", userPrompt);
+
     const { reply } = await textGeneration(userPrompt, systemPrompt);
     console.log("reply", reply);
     context.intent(reply);
@@ -137,9 +134,8 @@ export async function handleReply(context: HandlerContext) {
       userPrompt = userPrompt.replace(user, address);
     });
 
-    if (process?.env?.MSG_LOG === "true") {
-      console.log("userPrompt", userPrompt);
-    }
+    console.log("userPrompt", userPrompt);
+
     userPrompt =
       userPrompt +
       "\nIf you dont detect intent in the last message, dont reply.";
