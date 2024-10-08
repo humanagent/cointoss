@@ -1,6 +1,6 @@
 import { HandlerContext } from "@xmtp/message-kit";
 import { textGeneration } from "../lib/openai.js";
-import { USER_REPLACEMENTS } from "../lib/constants.js";
+import { USER_REPLACEMENTS, TAG_NAME } from "../lib/constants.js";
 import { hexToBytes } from "viem";
 
 export async function handleText(context: HandlerContext) {
@@ -22,15 +22,12 @@ export async function handleText(context: HandlerContext) {
     Object.entries(USER_REPLACEMENTS).forEach(([user, address]) => {
       userPrompt = userPrompt.replace(user, address);
     });
-    hexToBytes;
 
-    if (process?.env?.MSG_LOG === "true") {
-      console.log("userPrompt", userPrompt);
-    }
+    console.log("userPrompt", userPrompt);
 
     const { reply } = await textGeneration(userPrompt, systemPrompt);
     console.log("reply", reply);
-    context.intent(reply);
+    await context.intent(reply);
   } catch (error) {
     console.error("Error during OpenAI call:", error);
     await context.reply("An error occurred while processing your request.");
@@ -40,7 +37,7 @@ export async function handleText(context: HandlerContext) {
 function generateSystemPrompt(context: HandlerContext) {
   const systemPrompt = `You are a helpful and playful betting bot that lives inside a web3 messaging group.\n
 
-    Users can start a toss by tagging you in a yes or no question like '@cointoss Will it rain tomorrow for $10?' and I’ll take care of the rest.";
+    Users can start a toss by tagging you in a yes or no question like '${TAG_NAME} Will it rain tomorrow for $10?' and I’ll take care of the rest.";
 
     You then have an internal command to create a toss: "/toss [description] [options (separated by comma)] [amount] [judge(optional)]"
 
@@ -57,7 +54,7 @@ function generateSystemPrompt(context: HandlerContext) {
     - Tosses must always have two options. If options are not provided, assume "Yes" and "No."
     - For sports events, ensure the options are the two teams or players, as inferred from the context.
     - If the user provides unclear or incomplete information, infer and generate the correct toss format based on context.
-    - Maximum toss amount is 1000. Default to 10 if nothing is provided. 
+    - Maximum toss amount is 1000. Default to 10 if nothing is provided. Minimum is 0.00
     - Don't mention options in the toss name.
     - Add emojis to the options if you see it fit. Only very literal emojis like countries, flags, etc.
     - If toss is correct. Don't return anything else than the command. Ever.
@@ -92,10 +89,8 @@ export async function handleReaction(context: HandlerContext) {
       userPrompt = userPrompt.replace(user, address);
     });
 
-    if (process?.env?.MSG_LOG === "true") {
-      console.log("userPrompt", userPrompt);
-    }
     console.log("userPrompt", userPrompt);
+
     const { reply } = await textGeneration(userPrompt, systemPrompt);
     console.log("reply", reply);
     context.intent(reply);
@@ -121,12 +116,12 @@ export async function handleReply(context: HandlerContext) {
     v2client.address,
   );
 
-  let userPrompt = `The following is a conversation history. \nMessage History:\n${chain
-    .map((content) => `- ${content.address}: ${content.content}`)
-    .join("\n")}\nLatest reply: ${reply}`;
+  let userPrompt = `The following is a conversation history:\n${chain
+    .map((content) => `- ${content.content}`)
+    .join("\n")}\nLatest reply: ${reply}.`;
 
   if (
-    !userPrompt.includes("@cointoss") &&
+    !userPrompt.includes(TAG_NAME) &&
     !userPrompt.includes("🪙") &&
     !userPrompt.includes("💰") &&
     !isSenderInChain
@@ -139,15 +134,17 @@ export async function handleReply(context: HandlerContext) {
       userPrompt = userPrompt.replace(user, address);
     });
 
-    if (process?.env?.MSG_LOG === "true") {
-      console.log("userPrompt", userPrompt);
-    }
+    console.log("userPrompt", userPrompt);
+
+    userPrompt =
+      userPrompt +
+      "\nIf you dont detect intent in the last message, dont reply.";
     const { reply: replyPrompt } = await textGeneration(
       userPrompt,
       systemPrompt,
     );
     console.log("replyPrompt", replyPrompt);
-    context.intent(replyPrompt);
+    if (replyPrompt.startsWith("/")) context.intent(replyPrompt);
   } catch (error) {
     console.error("Error during OpenAI call:", error);
     await context.reply("An error occurred while processing your request.");
