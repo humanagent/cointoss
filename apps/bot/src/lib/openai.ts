@@ -30,7 +30,7 @@ export async function textGeneration(userPrompt: string, systemPrompt: string) {
       ?.replace(/^#+\s*(.*)$/gm, "$1")
       ?.replace(/`([^`]+)`/g, "$1")
       ?.replace(/^`|`$/g, "");
-
+    //1
     return { reply: cleanedReply as string, history: messages };
   } catch (error) {
     console.error("Failed to fetch from OpenAI:", error);
