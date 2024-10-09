@@ -54,7 +54,7 @@ function generateSystemPrompt(context: HandlerContext) {
     - Tosses must always have two options. If options are not provided, assume "Yes" and "No."
     - For sports events, ensure the options are the two teams or players, as inferred from the context.
     - If the user provides unclear or incomplete information, infer and generate the correct toss format based on context.
-    - Maximum toss amount is 1000. Default to 10 if nothing is provided. Minimum is 0.00
+    - Maximum toss amount is 10. Default to 10 if nothing is provided. Minimum is 0.00
     - Don't mention options in the toss name.
     - Add emojis to the options if you see it fit. Only very literal emojis like countries, flags, etc.
     - If toss is correct. Don't return anything else than the command. Ever.
