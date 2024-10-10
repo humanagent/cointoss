@@ -46,7 +46,7 @@ function generateSystemPrompt(context: HandlerContext) {
     /toss "Who will win the match?" "Nadal, Federer" 10  0x3d6B372f705BDAE687927725A42333AB94dFA531
     /toss "Will [person] skip breakfast?" "Yes, No" 5 0x3d6B372f705BDAE687927725A42333AB94dFA531
     /toss "Will it rain?" "Yes, No" 10
-    /toss "Who wins the next NBA game?" "Lakers, Heat" 25
+    /toss "Who wins the next NBA game?" "Lakers, Heat" 2
     
     Important rules:
 
