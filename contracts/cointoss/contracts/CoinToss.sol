@@ -43,6 +43,8 @@ contract CoinToss {
 
     address public tossingTokenAddress;
     uint256 public tossId;
+
+    uint256 maxTossingAmountPerOutcome;
     uint256 MAX_PLAYERS_FOR_OUTCOME_LENGTH = 10;
 
     using SafeERC20 for IERC20;
@@ -52,9 +54,10 @@ contract CoinToss {
      * @dev Initializes the contract with the default tossing token address.
      * @param _tossingTokenAddress The address of the ERC20 token to be used for tossing.
      */
-    constructor(address _tossingTokenAddress) {
+    constructor(address _tossingTokenAddress, uint256 _maxTossingAmountPerOutcome) {
         tossId = 0;
         tossingTokenAddress = _tossingTokenAddress;
+        maxTossingAmountPerOutcome = _maxTossingAmountPerOutcome;
     }
 
     //║══════════════════════════════════════════╗
@@ -120,14 +123,11 @@ contract CoinToss {
         uint256[] memory tossingAmounts,
         uint256 adminOutcome
     ) public returns (uint256) {
-        // validate parameters
-        require(admin != address(0), "Invalid admin address");
-        require(outcomes.length == tossingAmounts.length, "Outcomes and tossing amounts length mismatch");
-        require(outcomes.length > 1, "At least 2 outcomes required");
-        require(adminOutcome < outcomes.length, "Invalid admin outcome");
-        
-        tossId++; // increment toss ID
-
+        // validate parameters for creating a toss
+        _validateTossParameters(admin, condition, outcomes, tossingAmounts, adminOutcome);
+        // increment toss ID
+        tossId++; 
+        // create a new toss
         tosses[tossId] = Toss({
             admin: admin,
             condition: condition,
@@ -135,13 +135,14 @@ contract CoinToss {
             totalTossingAmount: 0,
             status: TossStatus.CREATED
         });
-
+        // set outcomes and tossing amounts
         outcomesToss[tossId] = outcomes;
         tossingAmountsToss[tossId] = tossingAmounts;
 
+        // if adminOutcome is provided, place a toss on the admin outcome
         if (adminOutcome != 0) {
             placeToss(tossId, (adminOutcome - 1));
-        }
+        } 
 
         emit TossCreated(admin, tossId, condition, outcomes, tossingAmounts, block.timestamp);
         return tossId;
@@ -174,15 +175,19 @@ contract CoinToss {
         uint256 outcomeIndex
     ) public {
         Toss storage toss = tosses[id];
+        // validate the toss parameters
         require(toss.status == TossStatus.CREATED, "Toss is already resolved");
         require(outcomeIndex < outcomesToss[id].length, "Invalid outcomeIndex");
         require(playerHasTossed[msg.sender][id] == false, "Player has already placed a toss"); 
         require(outcomeForPlayers[id][outcomeIndex].length < MAX_PLAYERS_FOR_OUTCOME_LENGTH, "Max players reached");
         
+        // transfer tossing amount from player to contract
         IERC20 token = IERC20(tossingTokenAddress);
         token.safeTransferFrom(msg.sender, address(this), tossingAmountsToss[id][outcomeIndex]); 
+        // update total tossing amount
         toss.totalTossingAmount += tossingAmountsToss[id][outcomeIndex];
 
+        // update player's toss and outcomeForPlayers
         playersToss[msg.sender][id] = outcomeIndex;
         outcomeForPlayers[id][outcomeIndex].push(msg.sender);
         playerHasTossed[msg.sender][id] = true;
@@ -191,7 +196,7 @@ contract CoinToss {
     }
 
     /**
-     * @dev Allows the admin to withdraw from a paused toss and return the tossing amounts to players.
+     * @dev Allows the admin to withdraw from a toss being paused and return the tossing amounts to players.
      * @param id The ID of the toss to withdraw.
      */
     function adminWithdrawPausedToss(
@@ -199,7 +204,7 @@ contract CoinToss {
     ) public {
         Toss storage toss = tosses[id];
         require(toss.status == TossStatus.CREATED, "Toss is already resolved"); 
-        require(msg.sender == toss.admin, "Only admin can distribute paused toss");
+        require(msg.sender == toss.admin, "Only admin can withdraw toss");
 
         uint256 outcomesLength = outcomesToss[id].length;
         IERC20 token = IERC20(tossingTokenAddress);
@@ -297,5 +302,22 @@ contract CoinToss {
         }
 
         emit TossPaid(id);
+    }
+
+    function _validateTossParameters(
+        address admin,
+        string memory condition,
+        string[] memory outcomes,
+        uint256[] memory tossingAmounts,
+        uint256 adminOutcome
+    ) internal {
+        require(admin != address(0), "Invalid admin address");
+        require(outcomes.length == tossingAmounts.length, "Outcomes and tossing amounts length mismatch");
+        require(outcomes.length > 1, "At least 2 outcomes required");
+        require(adminOutcome < outcomes.length, "Invalid admin outcome");
+        // validate tossingAmounts no more than maxTossingAmountPerOutcome
+        for (uint256 i = 0; i < tossingAmounts.length; i++) {
+            require(tossingAmounts[i] <= maxTossingAmountPerOutcome, "Tossing amount exceeds maxTossingAmountPerOutcome");
+        }
     }
 }
