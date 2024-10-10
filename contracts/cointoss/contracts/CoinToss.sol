@@ -18,6 +18,7 @@ contract CoinToss {
         string condition;
         uint256 outcomeIndex;
         uint256 totalTossingAmount;
+        uint256 endTime;
         TossStatus status;
     }
 
@@ -121,10 +122,11 @@ contract CoinToss {
         string memory condition,
         string[] memory outcomes,
         uint256[] memory tossingAmounts,
+        uint256 endTime,
         uint256 adminOutcome
     ) public returns (uint256) {
         // validate parameters for creating a toss
-        _validateTossParameters(admin, condition, outcomes, tossingAmounts, adminOutcome);
+        _validateTossParameters(admin, condition, outcomes, tossingAmounts, endTime, adminOutcome);
         // increment toss ID
         tossId++; 
         // create a new toss
@@ -133,6 +135,7 @@ contract CoinToss {
             condition: condition,
             outcomeIndex: 0,
             totalTossingAmount: 0,
+            endTime: endTime,
             status: TossStatus.CREATED
         });
         // set outcomes and tossing amounts
@@ -177,6 +180,7 @@ contract CoinToss {
         Toss storage toss = tosses[id];
         // validate the toss parameters
         require(toss.status == TossStatus.CREATED, "Toss is already resolved");
+        require(toss.endTime > block.timestamp, "Toss is already ended");
         require(outcomeIndex < outcomesToss[id].length, "Invalid outcomeIndex");
         require(playerHasTossed[msg.sender][id] == false, "Player has already placed a toss"); 
         require(outcomeForPlayers[id][outcomeIndex].length < MAX_PLAYERS_FOR_OUTCOME_LENGTH, "Max players reached");
@@ -234,6 +238,7 @@ contract CoinToss {
         Toss storage toss = tosses[id];
         require(toss.status == TossStatus.CREATED, "Toss is already resolved");
         require(msg.sender == toss.admin, "Only admin can resolve the toss");
+        require(toss.endTime < block.timestamp, "Toss is not ended");
         require(outcomeIndex < outcomesToss[id].length, "Invalid outcomeIndex");
         
         uint256 tossingAmount = tossingAmountsToss[id][outcomeIndex];
@@ -309,12 +314,14 @@ contract CoinToss {
         string memory condition,
         string[] memory outcomes,
         uint256[] memory tossingAmounts,
+        uint256 endTime,
         uint256 adminOutcome
     ) internal {
         require(admin != address(0), "Invalid admin address");
         require(outcomes.length == tossingAmounts.length, "Outcomes and tossing amounts length mismatch");
         require(outcomes.length > 1, "At least 2 outcomes required");
         require(adminOutcome < outcomes.length, "Invalid admin outcome");
+        require(endTime > block.timestamp, "End time is in the past");
         // validate tossingAmounts no more than maxTossingAmountPerOutcome
         for (uint256 i = 0; i < tossingAmounts.length; i++) {
             require(tossingAmounts[i] <= maxTossingAmountPerOutcome, "Tossing amount exceeds maxTossingAmountPerOutcome");
