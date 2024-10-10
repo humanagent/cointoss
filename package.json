@@ -8,6 +8,7 @@
   "scripts": {
     "build": "turbo build",
     "clean": "turbo clean && rm -rf node_modules && rm -rf .turbo && yarn cache clean",
+    "compile": "cd contracts/cointoss && npx hardhat compile",
     "dev": "turbo dev",
     "dev:bot": "cd apps/bot && yarn dev",
     "dev:frame": "cd apps/frame && yarn dev",
