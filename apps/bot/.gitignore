@@ -37,6 +37,7 @@ dist
 
 # Gatsby files
 .cache/
+.data/
 public
 
 # Mac files
