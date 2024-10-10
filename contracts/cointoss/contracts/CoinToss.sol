@@ -1,53 +1,95 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
+
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-
 contract CoinToss {
 
-    enum TossStatus {
-        CREATED,
-        PAID,
-        PAUSED,
-        RESOLVED
-    }
-
-    struct Toss {
-        address admin;
-        string condition;
-        uint256 outcomeIndex;
-        uint256 totalTossingAmount;
-        uint256 endTime;
-        TossStatus status;
-    }
-
+    //║══════════════════════════════════════════╗
+    //║              Errors                      ║
+    //║══════════════════════════════════════════╝
+    error InvalidAdminAddress();
+    error InvalidCondition();
+    error OutcomesAndAmountsMismatch();
+    error AtLeastTwoOutcomesRequired();
+    error InvalidAdminOutcome();
+    error EndTimeInPast();
+    error TossingAmountExceedsMax();
+    error TossAlreadyResolved();
+    error TossAlreadyEnded();
+    error InvalidOutcomeIndex();
+    error PlayerAlreadyTossed();
+    error MaxPlayersReached();
+    error OnlyAdmin();
+    error TossNotResolved();
+    error TossNotEnded();
+    
     //║══════════════════════════════════════════╗
     //║              Events                      ║
     //║══════════════════════════════════════════╝
-    event TossCreated(address admin, uint256 indexed tossId, string condition, string[] outcomes, uint256[] tossingAmounts, uint256 startTime/*, uint256 endTime*/);
-    event TossPlaced(uint256 indexed tossId, address indexed player, uint256 outcomeIndex, uint256 tossingAmount);
+    event TossCreated(
+        address admin,
+        uint256 indexed tossId,
+        string condition,
+        string[] outcomes,
+        uint256[] tossingAmounts,
+        uint256 startTime
+    );
+    
+    event TossPlaced(
+        uint256 indexed tossId,
+        address indexed player,
+        uint256 outcomeIndex,
+        uint256 tossingAmount
+    );
+    
     event TossWithdrawn(uint256 indexed tossId, address indexed player);
     event TossPaused(uint256 indexed tossId);
     event TossPaid(uint256 indexed tossId);
 
+    // Enumeration to represent the status of a coin toss
+    enum TossStatus {
+        CREATED,   // Toss has been created but is ongoing
+        PAID,      // Winnings have been paid out
+        PAUSED,    // Toss has been paused
+        RESOLVED   // Toss has been resolved, but winnings not yet paid
+    }
+
+    // Structure to represent a toss
+    struct Toss {
+        address admin;                 // Address of the toss creator/admin
+        string condition;              // Description or condition of the toss
+        uint256 outcomeIndex;          // Index of the winning outcome
+        uint256 totalTossingAmount;    // Total amount bet on this toss
+        uint256 endTime;               // End time for the toss
+        TossStatus status;             // Current status of the toss
+    }
+
     //║══════════════════════════════════════════╗
     //║             Storage                      ║
     //║══════════════════════════════════════════╝
-    mapping(uint256 => Toss) public tosses;
-    mapping(address => mapping(uint256 => uint256)) public playersToss;
-    mapping(uint256 => mapping(uint256 => address[])) public outcomeForPlayers;
-    mapping(address => mapping(uint256 => bool)) public playerHasTossed;
-    
-    mapping(uint256 => string[]) public outcomesToss;
-    mapping(uint256 => uint256[]) public tossingAmountsToss;
+    mapping(uint256 => Toss) public tosses;  // Mapping of toss ID to Toss struct
+    mapping(address => mapping(uint256 => uint256)) public playersToss;  // Mapping of player address to their toss bet
+    mapping(uint256 => mapping(uint256 => address[])) public outcomeForPlayers;  // Players associated with each outcome
+    mapping(address => mapping(uint256 => bool)) public playerHasTossed;  // Tracks if a player has already bet on a toss
 
+    mapping(uint256 => string[]) public outcomesToss;  // Available outcomes for each toss
+    mapping(uint256 => uint256[]) public tossingAmountsToss;  // Corresponding betting amounts for each outcome
+
+    // Address of the ERC20 token used for betting
     address public tossingTokenAddress;
+    
+    // Counter for the number of tosses created
     uint256 public tossId;
 
+    // Maximum amount that can be bet per outcome
     uint256 maxTossingAmountPerOutcome;
+    
+    // Maximum number of players allowed per outcome
     uint256 MAX_PLAYERS_FOR_OUTCOME_LENGTH = 10;
 
+    // Using SafeERC20 to handle ERC20 token transfers safely
     using SafeERC20 for IERC20;
 
     // Constructor
@@ -56,13 +98,13 @@ contract CoinToss {
      * @param _tossingTokenAddress The address of the ERC20 token to be used for tossing.
      */
     constructor(address _tossingTokenAddress, uint256 _maxTossingAmountPerOutcome) {
-        tossId = 0;
-        tossingTokenAddress = _tossingTokenAddress;
-        maxTossingAmountPerOutcome = _maxTossingAmountPerOutcome;
+        tossId = 0;  // Initialize tossId to 0
+        tossingTokenAddress = _tossingTokenAddress;  // Store the address of the ERC20 token used for betting
+        maxTossingAmountPerOutcome = _maxTossingAmountPerOutcome;  // Set max betting amount per outcome
     }
 
     //║══════════════════════════════════════════╗
-    //║    View Functions                        ║
+    //║            View Functions                ║
     //║══════════════════════════════════════════╝
 
     /**
@@ -105,17 +147,18 @@ contract CoinToss {
     }
 
     //║══════════════════════════════════════════╗
-    //║    Users Functions                       ║
+    //║            Users Functions               ║
     //║══════════════════════════════════════════╝
 
     /**
-     * @dev Creates a new toss with the specified parameters.
-     * @param admin The address of the toss admin.
-     * @param condition The condition or description of the toss.
-     * @param outcomes The possible outcomes of the toss.
-     * @param tossingAmounts The amounts required to toss on each outcome.
-     * @param adminOutcome The index of the outcome the admin wants to toss on (optional).
-     * @return The ID of the created toss.
+     * @notice Creates a new toss with the specified parameters
+     * @param admin Address of the toss creator
+     * @param condition Description of the toss condition
+     * @param outcomes Array of possible outcomes
+     * @param tossingAmounts Array of corresponding betting amounts for each outcome
+     * @param endTime Timestamp when the toss ends
+     * @param adminOutcome Index of the outcome the admin bets on, if any (1-indexed)
+     * @return The ID of the newly created toss
      */
     function createToss(
         address admin,
@@ -125,11 +168,12 @@ contract CoinToss {
         uint256 endTime,
         uint256 adminOutcome
     ) public returns (uint256) {
-        // validate parameters for creating a toss
+        // Validate toss parameters before creating
         _validateTossParameters(admin, condition, outcomes, tossingAmounts, endTime, adminOutcome);
-        // increment toss ID
-        tossId++; 
-        // create a new toss
+        
+        tossId++;  // Increment the toss ID counter
+        
+        // Store the new toss information in the contract's state
         tosses[tossId] = Toss({
             admin: admin,
             condition: condition,
@@ -138,24 +182,26 @@ contract CoinToss {
             endTime: endTime,
             status: TossStatus.CREATED
         });
-        // set outcomes and tossing amounts
+        
+        // Store the outcomes and amounts for this toss
         outcomesToss[tossId] = outcomes;
         tossingAmountsToss[tossId] = tossingAmounts;
 
-        // if adminOutcome is provided, place a toss on the admin outcome
+        // If the admin has placed a bet, record it
         if (adminOutcome != 0) {
             placeToss(tossId, (adminOutcome - 1));
-        } 
+        }
 
+        // Emit event for toss creation
         emit TossCreated(admin, tossId, condition, outcomes, tossingAmounts, block.timestamp);
         return tossId;
     }
 
     /**
-     * @dev Allows the admin to change the toss metadata.
-     * @param id The ID of the toss.
-     * @param condition The updated condition or description of the toss.
-     * @param outcomes The updated possible outcomes of the toss.
+     * @notice Updates the metadata (condition and outcomes) for a toss
+     * @param id The ID of the toss to update
+     * @param condition The new condition of the toss
+     * @param outcomes The new list of outcomes
      */
     function changeTossMetadata(
         uint256 id,
@@ -163,35 +209,35 @@ contract CoinToss {
         string[] memory outcomes
     ) public {
         Toss storage toss = tosses[id];
-        require(msg.sender == toss.admin, "Only admin can change toss metadata");
-        toss.condition = condition;
-        outcomesToss[id] = outcomes;
+        if (msg.sender != toss.admin) revert OnlyAdmin();  // Only admin can update toss metadata
+        toss.condition = condition;  // Update condition
+        outcomesToss[id] = outcomes;  // Update outcomes
     }
 
     /**
-     * @dev Allows a player to place a toss on a specific outcome.
-     * @param id The ID of the toss.
-     * @param outcomeIndex The index of the outcome the player wants to toss on.
+     * @notice Place a bet on a specific outcome for a toss
+     * @param id The ID of the toss
+     * @param outcomeIndex The index of the outcome to bet on
      */
     function placeToss(
         uint256 id, 
         uint256 outcomeIndex
     ) public {
         Toss storage toss = tosses[id];
-        // validate the toss parameters
-        require(toss.status == TossStatus.CREATED, "Toss is already resolved");
-        require(toss.endTime > block.timestamp, "Toss is already ended");
-        require(outcomeIndex < outcomesToss[id].length, "Invalid outcomeIndex");
-        require(playerHasTossed[msg.sender][id] == false, "Player has already placed a toss"); 
-        require(outcomeForPlayers[id][outcomeIndex].length < MAX_PLAYERS_FOR_OUTCOME_LENGTH, "Max players reached");
-        
-        // transfer tossing amount from player to contract
-        IERC20 token = IERC20(tossingTokenAddress);
-        token.safeTransferFrom(msg.sender, address(this), tossingAmountsToss[id][outcomeIndex]); 
-        // update total tossing amount
-        toss.totalTossingAmount += tossingAmountsToss[id][outcomeIndex];
 
-        // update player's toss and outcomeForPlayers
+        // Various validation checks before placing the bet
+        if (toss.status != TossStatus.CREATED) revert TossAlreadyResolved();
+        if (toss.endTime <= block.timestamp) revert TossAlreadyEnded();
+        if (outcomeIndex >= outcomesToss[id].length) revert InvalidOutcomeIndex();
+        if (playerHasTossed[msg.sender][id]) revert PlayerAlreadyTossed();
+        if (outcomeForPlayers[id][outcomeIndex].length >= MAX_PLAYERS_FOR_OUTCOME_LENGTH) revert MaxPlayersReached();
+
+        // Transfer the betting amount from the player to the contract
+        IERC20 token = IERC20(tossingTokenAddress);
+        token.safeTransferFrom(msg.sender, address(this), tossingAmountsToss[id][outcomeIndex]);
+        
+        // Update toss state with the player's bet
+        toss.totalTossingAmount += tossingAmountsToss[id][outcomeIndex];
         playersToss[msg.sender][id] = outcomeIndex;
         outcomeForPlayers[id][outcomeIndex].push(msg.sender);
         playerHasTossed[msg.sender][id] = true;
@@ -199,7 +245,7 @@ contract CoinToss {
         emit TossPlaced(id, msg.sender, outcomeIndex, tossingAmountsToss[id][outcomeIndex]);
     }
 
-    /**
+   /**
      * @dev Allows the admin to withdraw from a toss being paused and return the tossing amounts to players.
      * @param id The ID of the toss to withdraw.
      */
@@ -309,6 +355,15 @@ contract CoinToss {
         emit TossPaid(id);
     }
 
+    /**
+     * @notice Validate toss parameters to ensure valid input values before creation
+     * @param admin The address of the toss creator
+     * @param condition The condition of the toss
+     * @param outcomes The list of outcomes
+     * @param tossingAmounts The corresponding betting amounts for each outcome
+     * @param endTime The end time of the toss
+     * @param adminOutcome The index of the outcome the admin bets on, if any (1-indexed)
+     */
     function _validateTossParameters(
         address admin,
         string memory condition,
@@ -316,15 +371,17 @@ contract CoinToss {
         uint256[] memory tossingAmounts,
         uint256 endTime,
         uint256 adminOutcome
-    ) internal {
-        require(admin != address(0), "Invalid admin address");
-        require(outcomes.length == tossingAmounts.length, "Outcomes and tossing amounts length mismatch");
-        require(outcomes.length > 1, "At least 2 outcomes required");
-        require(adminOutcome < outcomes.length, "Invalid admin outcome");
-        require(endTime > block.timestamp, "End time is in the past");
-        // validate tossingAmounts no more than maxTossingAmountPerOutcome
+    ) internal view {
+        if (admin == address(0)) revert InvalidAdminAddress();
+        if (bytes(condition).length == 0) revert InvalidCondition();
+        if (outcomes.length != tossingAmounts.length) revert OutcomesAndAmountsMismatch();
+        if (outcomes.length < 2) revert AtLeastTwoOutcomesRequired();
+        if (adminOutcome > outcomes.length) revert InvalidAdminOutcome();
+        if (endTime <= block.timestamp) revert EndTimeInPast();
+        
+        // Ensure each betting amount is within the allowed limit
         for (uint256 i = 0; i < tossingAmounts.length; i++) {
-            require(tossingAmounts[i] <= maxTossingAmountPerOutcome, "Tossing amount exceeds maxTossingAmountPerOutcome");
+            if (tossingAmounts[i] > maxTossingAmountPerOutcome) revert TossingAmountExceedsMax();
         }
     }
 }
