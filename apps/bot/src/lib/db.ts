@@ -5,7 +5,7 @@ import { JSONFile } from "lowdb/node";
 const adapter = new JSONFile<{
   initialMessages: Record<string, boolean>;
   firstToss: Record<string, boolean>;
-}>(".cache/db.json");
+}>(".data/db.json");
 export const db = new Low<{
   initialMessages: Record<string, boolean>;
   firstToss: Record<string, boolean>;
