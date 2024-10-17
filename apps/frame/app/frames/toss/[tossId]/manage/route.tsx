@@ -7,7 +7,7 @@ import { Button } from "frames.js/next";
 
 const handleRequest = frames(async (ctx) => {
   const url = new URL(ctx.request.url);
-  const betId = url.pathname.split("/")[3];
+  const tossId = url.pathname.split("/")[3];
 
   const publicClient = createPublicClient({
     chain: base,
@@ -18,7 +18,7 @@ const handleRequest = frames(async (ctx) => {
     address: process.env.COINTOSS_CONTRACT_ADDRESS as `0x${string}`,
     abi: BETBOT_ABI,
     functionName: "betInfo",
-    args: [BigInt(betId)],
+    args: [BigInt(tossId)],
   });
 
   const amount = amounts[0];
@@ -31,13 +31,13 @@ const handleRequest = frames(async (ctx) => {
       address: process.env.COINTOSS_CONTRACT_ADDRESS as `0x${string}`,
       abi: BETBOT_ABI,
       functionName: "outcomeForPlayer",
-      args: [BigInt(betId), BigInt(0)],
+      args: [BigInt(tossId), BigInt(0)],
     }),
     publicClient.readContract({
       address: process.env.COINTOSS_CONTRACT_ADDRESS as `0x${string}`,
       abi: BETBOT_ABI,
       functionName: "outcomeForPlayer",
-      args: [BigInt(betId), BigInt(1)],
+      args: [BigInt(tossId), BigInt(1)],
     }),
   ]);
 
@@ -79,7 +79,7 @@ const handleRequest = frames(async (ctx) => {
         "Cache-Control": "public, immutable, no-transform, max-age=0",
       },
       buttons: [
-        <Button action="post" target={`/toss/${betId}`}>
+        <Button action="post" target={`/toss/${tossId}`}>
           ⬅️ Go back
         </Button>,
       ],
@@ -95,10 +95,10 @@ const handleRequest = frames(async (ctx) => {
           height={"100%"}
           tw="relative">
           {" "}
-          <div tw="absolute relative flex justify-center w-full px-[32px]">
+          <div tw="absolute relative flex justify-center items-center w-full h-[350px] px-[36px]">
             <h1
-              tw="text-[#014601] text-[100px] uppercase text-center"
-              style={{ fontFamily: "Vanguard-Bold" }}>
+              tw="text-[#014601] text-[120px] uppercase text-center"
+              style={{ fontFamily: "Vanguard-Bold", lineHeight: "80px" }}>
               {bet.condition}
             </h1>
           </div>
@@ -155,34 +155,34 @@ const handleRequest = frames(async (ctx) => {
     buttons: [
       // <Button
       //   action="tx"
-      //   target={`/set-bet-result-tx?betId=${betId}&outcome=0`}
-      //   post_url={`/toss/${betId}`}
+      //   target={`/set-bet-result-tx?tossId=${tossId}&outcome=0`}
+      //   post_url={`/toss/${tossId}`}
       // >
       //   {`🏆 ${outcomes[0]}`}
       // </Button>,
       // <Button
       //   action="tx"
-      //   target={`/set-bet-result-tx?betId=${betId}&outcome=1`}
-      //   post_url={`/toss/${betId}`}
+      //   target={`/set-bet-result-tx?tossId=${tossId}&outcome=1`}
+      //   post_url={`/toss/${tossId}`}
       // >
       //   {`🏆 ${outcomes[1]}`}
       // </Button>,
       <Button
         action="tx"
-        target={`/set-bet-result-tx?betId=${betId}&outcome=0`}
-        post_url={`/set-bet-result-tx/success?betId=${betId}&outcome=0`}>
+        target={`/set-bet-result-tx?tossId=${tossId}&outcome=0`}
+        post_url={`/set-bet-result-tx/success?tossId=${tossId}&outcome=0`}>
         {`🏆 ${outcomes[0]}`}
       </Button>,
       <Button
         action="tx"
-        target={`/set-bet-result-tx?betId=${betId}&outcome=1`}
-        post_url={`/set-bet-result-tx/success?betId=${betId}&outcome=1`}>
+        target={`/set-bet-result-tx?tossId=${tossId}&outcome=1`}
+        post_url={`/set-bet-result-tx/success?tossId=${tossId}&outcome=1`}>
         {`🏆 ${outcomes[1]}`}
       </Button>,
-      <Button action="post" target={`/toss/${betId}/cancel`}>
+      <Button action="post" target={`/toss/${tossId}/cancel`}>
         ❌ Cancel
       </Button>,
-      <Button action="post" target={`/toss/${betId}`}>
+      <Button action="post" target={`/toss/${tossId}`}>
         ⬅️ Go back
       </Button>,
     ],

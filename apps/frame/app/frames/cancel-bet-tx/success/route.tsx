@@ -7,22 +7,22 @@ const handleRequest = frames(async (ctx) => {
   // get path params
   const url = new URL(ctx.request.url);
   const queryParams = new URLSearchParams(url.search);
-  const betId = queryParams.get("betId");
+  const tossId = queryParams.get("tossId");
 
   const buttons = [
-    <Button action="post" target={`/toss/${betId}`}>
+    <Button action="post" target={`/toss/${tossId}`}>
       ⬅️ Go back
     </Button>,
   ];
 
   // save cancel toss tx hash
   const txHash = ctx.message?.transactionId;
-  if (txHash && betId) {
+  if (txHash && tossId) {
     // save tx hash
     const redis = await getRedisClient();
-    const betDataString = await redis.get(betId);
+    const betDataString = await redis.get(tossId);
     const betData = betDataString ? JSON.parse(betDataString) : null;
-    await redis.set(betId, {
+    await redis.set(tossId, {
       //@ts-ignore
       ...betData,
       cancelTransactionId: txHash,

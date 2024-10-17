@@ -9,7 +9,7 @@ import { getRedisClient } from "@/lib/redis";
 const handleRequest = frames(async (ctx) => {
   // get path params
   const url = new URL(ctx.request.url);
-  const betId = url.pathname.split("/")[3];
+  const tossId = url.pathname.split("/")[3];
   const publicClient = createPublicClient({
     chain: base,
     transport: http(),
@@ -19,12 +19,12 @@ const handleRequest = frames(async (ctx) => {
     address: process.env.COINTOSS_CONTRACT_ADDRESS as `0x${string}`,
     abi: BETBOT_ABI,
     functionName: "betInfo",
-    args: [BigInt(betId)],
+    args: [BigInt(tossId)],
   });
 
   const amount = amounts[0];
   const redis = await getRedisClient();
-  const betDataString = await redis.get(betId);
+  const betDataString = await redis.get(tossId);
   const betData = betDataString ? JSON.parse(betDataString) : null;
 
   const totalBetAmount = formatUnits(bet.totalBettingAmount, 6);
@@ -34,13 +34,13 @@ const handleRequest = frames(async (ctx) => {
       address: process.env.COINTOSS_CONTRACT_ADDRESS as `0x${string}`,
       abi: BETBOT_ABI,
       functionName: "outcomeForPlayer",
-      args: [BigInt(betId), BigInt(0)],
+      args: [BigInt(tossId), BigInt(0)],
     }),
     publicClient.readContract({
       address: process.env.COINTOSS_CONTRACT_ADDRESS as `0x${string}`,
       abi: BETBOT_ABI,
       functionName: "outcomeForPlayer",
-      args: [BigInt(betId), BigInt(1)],
+      args: [BigInt(tossId), BigInt(1)],
     }),
   ]);
 
@@ -107,10 +107,10 @@ const handleRequest = frames(async (ctx) => {
             width={"100%"}
             height={"100%"}
             tw="relative">
-            <div tw="absolute relative flex justify-center w-full px-[32px]">
+            <div tw="absolute relative flex justify-center items-center w-full h-[350px] px-[36px]">
               <h1
-                tw="text-[#014601] text-[100px] uppercase text-center"
-                style={{ fontFamily: "Vanguard-Bold" }}>
+                tw="text-[#014601] text-[120px] uppercase text-center"
+                style={{ fontFamily: "Vanguard-Bold", lineHeight: "80px" }}>
                 {bet.condition}
               </h1>
             </div>
@@ -175,10 +175,10 @@ const handleRequest = frames(async (ctx) => {
 
   if (bet.status === BetStatus.CREATED) {
     buttons.push(
-      <Button action="post" target={`/toss/${betId}/place-bet`}>
+      <Button action="post" target={`/toss/${tossId}/place-bet`}>
         🪙 Toss
       </Button>,
-      <Button action="post" target={`/toss/${betId}/manage`}>
+      <Button action="post" target={`/toss/${tossId}/manage`}>
         ⚙️ Manage
       </Button>,
     );
@@ -192,7 +192,7 @@ const handleRequest = frames(async (ctx) => {
           width={"100%"}
           height={"100%"}
           tw="relative">
-          <div tw="absolute relative flex justify-center w-full px-[32px]">
+          <div tw="absolute relative flex justify-center items-center w-full h-[350px] px-[36px]">
             <h1
               tw="text-[#014601] text-[120px] uppercase text-center"
               style={{ fontFamily: "Vanguard-Bold", lineHeight: "80px" }}>

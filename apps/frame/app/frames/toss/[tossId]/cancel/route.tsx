@@ -8,7 +8,7 @@ import { getRedisClient } from "@/lib/redis";
 
 const handleRequest = frames(async (ctx) => {
   const url = new URL(ctx.request.url);
-  const betId = url.pathname.split("/")[3];
+  const tossId = url.pathname.split("/")[3];
 
   const publicClient = createPublicClient({
     chain: base,
@@ -19,7 +19,7 @@ const handleRequest = frames(async (ctx) => {
     address: process.env.COINTOSS_CONTRACT_ADDRESS as `0x${string}`,
     abi: BETBOT_ABI,
     functionName: "betInfo",
-    args: [BigInt(betId)],
+    args: [BigInt(tossId)],
   });
 
   const amount = amounts[0];
@@ -63,7 +63,7 @@ const handleRequest = frames(async (ctx) => {
         "Cache-Control": "public, immutable, no-transform, max-age=0",
       },
       buttons: [
-        <Button action="post" target={`/toss/${betId}`}>
+        <Button action="post" target={`/toss/${tossId}`}>
           ⬅️ Go back
         </Button>,
       ],
@@ -104,11 +104,11 @@ const handleRequest = frames(async (ctx) => {
     buttons: [
       <Button
         action="tx"
-        target={`/cancel-bet-tx?betId=${betId}`}
-        post_url={`/cancel-bet-tx/success?betId=${betId}`}>
+        target={`/cancel-bet-tx?tossId=${tossId}`}
+        post_url={`/cancel-bet-tx/success?tossId=${tossId}`}>
         ✅ Confirm
       </Button>,
-      <Button action="post" target={`/toss/${betId}/manage`}>
+      <Button action="post" target={`/toss/${tossId}/manage`}>
         ⬅️ Go back
       </Button>,
     ],

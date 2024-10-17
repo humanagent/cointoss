@@ -8,20 +8,20 @@ export const POST = frames(async (ctx) => {
   const url = new URL(ctx.request.url);
   const queryParams = new URLSearchParams(url.search);
   const outcome = queryParams.get("outcome");
-  const betId = queryParams.get("betId");
+  const tossId = queryParams.get("tossId");
 
   if (!ctx?.message) {
     throw new Error("Invalid frame message");
   }
 
-  if (!outcome || !betId) {
+  if (!outcome || !tossId) {
     throw new Error("Invalid parameters");
   }
 
   const calldata = encodeFunctionData({
     abi: BETBOT_ABI,
     functionName: "resolveBet",
-    args: [BigInt(betId), BigInt(outcome), true] as const,
+    args: [BigInt(tossId), BigInt(outcome), true] as const,
   });
 
   return transaction({

@@ -8,7 +8,7 @@ import { Button } from "frames.js/next";
 const handleRequest = frames(async (ctx) => {
   // get path params
   const url = new URL(ctx.request.url);
-  const betId = url.pathname.split("/")[3];
+  const tossId = url.pathname.split("/")[3];
 
   const publicClient = createPublicClient({
     chain: base,
@@ -19,7 +19,7 @@ const handleRequest = frames(async (ctx) => {
     address: process.env.COINTOSS_CONTRACT_ADDRESS as `0x${string}`,
     abi: BETBOT_ABI,
     functionName: "betInfo",
-    args: [BigInt(betId)],
+    args: [BigInt(tossId)],
   });
 
   const [outcomeOnePlayers, outcomeTwoPlayers] = await Promise.all([
@@ -27,13 +27,13 @@ const handleRequest = frames(async (ctx) => {
       address: process.env.COINTOSS_CONTRACT_ADDRESS as `0x${string}`,
       abi: BETBOT_ABI,
       functionName: "outcomeForPlayer",
-      args: [BigInt(betId), BigInt(0)],
+      args: [BigInt(tossId), BigInt(0)],
     }),
     publicClient.readContract({
       address: process.env.COINTOSS_CONTRACT_ADDRESS as `0x${string}`,
       abi: BETBOT_ABI,
       functionName: "outcomeForPlayer",
-      args: [BigInt(betId), BigInt(1)],
+      args: [BigInt(tossId), BigInt(1)],
     }),
   ]);
 
@@ -87,7 +87,7 @@ const handleRequest = frames(async (ctx) => {
         "Cache-Control": "public, immutable, no-transform, max-age=0",
       },
       buttons: [
-        <Button action="post" target={`/toss/${betId}`}>
+        <Button action="post" target={`/toss/${tossId}`}>
           ⬅️ Go back
         </Button>,
       ],
@@ -138,7 +138,7 @@ const handleRequest = frames(async (ctx) => {
       "Cache-Control": "public, immutable, no-transform, max-age=0",
     },
     buttons: [
-      <Button action="post" target={`/toss/${betId}`}>
+      <Button action="post" target={`/toss/${tossId}`}>
         ⬅️ Go back
       </Button>,
     ],

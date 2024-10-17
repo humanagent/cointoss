@@ -9,7 +9,7 @@ const handleRequest = frames(async (ctx) => {
   const user = await ctx.walletAddress();
   // get path params
   const url = new URL(ctx.request.url);
-  const betId = url.pathname.split("/")[3];
+  const tossId = url.pathname.split("/")[3];
 
   const publicClient = createPublicClient({
     chain: base,
@@ -20,7 +20,7 @@ const handleRequest = frames(async (ctx) => {
     address: process.env.COINTOSS_CONTRACT_ADDRESS as `0x${string}`,
     abi: BETBOT_ABI,
     functionName: "betInfo",
-    args: [BigInt(betId)],
+    args: [BigInt(tossId)],
   });
 
   const allowance = await publicClient.readContract({
@@ -37,14 +37,14 @@ const handleRequest = frames(async (ctx) => {
     address: process.env.COINTOSS_CONTRACT_ADDRESS as `0x${string}`,
     abi: BETBOT_ABI,
     functionName: "playerBet",
-    args: [user as `0x${string}`, BigInt(betId)],
+    args: [user as `0x${string}`, BigInt(tossId)],
   });
 
   const playerHasBet = await publicClient.readContract({
     address: process.env.COINTOSS_CONTRACT_ADDRESS as `0x${string}`,
     abi: BETBOT_ABI,
     functionName: "playerHasBet",
-    args: [user as `0x${string}`, BigInt(betId)],
+    args: [user as `0x${string}`, BigInt(tossId)],
   });
 
   const amount = amounts[0];
@@ -56,13 +56,13 @@ const handleRequest = frames(async (ctx) => {
       address: process.env.COINTOSS_CONTRACT_ADDRESS as `0x${string}`,
       abi: BETBOT_ABI,
       functionName: "outcomeForPlayer",
-      args: [BigInt(betId), BigInt(0)],
+      args: [BigInt(tossId), BigInt(0)],
     }),
     publicClient.readContract({
       address: process.env.COINTOSS_CONTRACT_ADDRESS as `0x${string}`,
       abi: BETBOT_ABI,
       functionName: "outcomeForPlayer",
-      args: [BigInt(betId), BigInt(1)],
+      args: [BigInt(tossId), BigInt(1)],
     }),
   ]);
 
@@ -75,12 +75,12 @@ const handleRequest = frames(async (ctx) => {
         <Button
           action="tx"
           target={`/approve-tx?amount=${formatUnits(BigInt(amount), 6)}`}
-          post_url={`/toss/${betId}/place-bet`}>
+          post_url={`/toss/${tossId}/place-bet`}>
           {`Approve ${formatUnits(BigInt(amount), 6)} USDC`}
         </Button>,
       );
       buttons.push(
-        <Button action="post" target={`/toss/${betId}`}>
+        <Button action="post" target={`/toss/${tossId}/place-bet`}>
           🔄 Refresh approval
         </Button>,
       );
@@ -88,23 +88,23 @@ const handleRequest = frames(async (ctx) => {
       buttons.push(
         <Button
           action="tx"
-          target={`/place-bet-tx?betId=${betId}&outcome=0`}
-          post_url={`/place-bet-tx/success?betId=${betId}&outcome=0`}>
+          target={`/place-bet-tx?tossId=${tossId}&outcome=0`}
+          post_url={`/place-bet-tx/success?tossId=${tossId}&outcome=0`}>
           {`🔵 ${outcomes[0]}`}
         </Button>,
       );
       buttons.push(
         <Button
           action="tx"
-          target={`/place-bet-tx?betId=${betId}&outcome=1`}
-          post_url={`/place-bet-tx/success?betId=${betId}&outcome=1`}>
+          target={`/place-bet-tx?tossId=${tossId}&outcome=1`}
+          post_url={`/place-bet-tx/success?tossId=${tossId}&outcome=1`}>
           {`🔴 ${outcomes[1]}`}
         </Button>,
       );
     }
   }
   buttons.push(
-    <Button action="post" target={`/toss/${betId}`}>
+    <Button action="post" target={`/toss/${tossId}`}>
       ⬅️ Go back
     </Button>,
   );
@@ -181,7 +181,7 @@ const handleRequest = frames(async (ctx) => {
         "Cache-Control": "public, immutable, no-transform, max-age=0",
       },
       buttons: [
-        <Button action="post" target={`/toss/${betId}`}>
+        <Button action="post" target={`/toss/${tossId}`}>
           ⬅️ Go back
         </Button>,
       ],
@@ -198,11 +198,10 @@ const handleRequest = frames(async (ctx) => {
             width={"100%"}
             height={"100%"}
             tw="relative">
-            {" "}
-            <div tw="absolute relative flex justify-center w-full px-[32px]">
+            <div tw="absolute relative flex justify-center items-center w-full h-[350px] px-[36px]">
               <h1
-                tw="text-[#014601] text-[100px] uppercase text-center"
-                style={{ fontFamily: "Vanguard-Bold" }}>
+                tw="text-[#014601] text-[120px] uppercase text-center"
+                style={{ fontFamily: "Vanguard-Bold", lineHeight: "80px" }}>
                 {bet.condition}
               </h1>
             </div>
@@ -275,10 +274,10 @@ const handleRequest = frames(async (ctx) => {
           width={"100%"}
           height={"100%"}
           tw="relative">
-          <div tw="absolute relative flex justify-center w-full px-[32px]">
+          <div tw="absolute relative flex justify-center items-center w-full h-[350px] px-[36px]">
             <h1
-              tw="text-[#014601] text-[100px] uppercase text-center"
-              style={{ fontFamily: "Vanguard-Bold" }}>
+              tw="text-[#014601] text-[120px] uppercase text-center"
+              style={{ fontFamily: "Vanguard-Bold", lineHeight: "80px" }}>
               {bet.condition}
             </h1>
           </div>

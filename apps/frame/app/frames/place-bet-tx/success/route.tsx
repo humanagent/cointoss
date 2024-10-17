@@ -10,7 +10,7 @@ const handleRequest = frames(async (ctx) => {
   const url = new URL(ctx.request.url);
   const queryParams = new URLSearchParams(url.search);
   const outcome = queryParams.get("outcome");
-  const betId = queryParams.get("betId");
+  const tossId = queryParams.get("tossId");
 
   const publicClient = createPublicClient({
     chain: base,
@@ -21,7 +21,7 @@ const handleRequest = frames(async (ctx) => {
     address: process.env.COINTOSS_CONTRACT_ADDRESS as `0x${string}`,
     abi: BETBOT_ABI,
     functionName: "betInfo",
-    args: [BigInt(betId!)],
+    args: [BigInt(tossId!)],
   });
 
   const amount = amounts[0];
@@ -33,20 +33,20 @@ const handleRequest = frames(async (ctx) => {
       address: process.env.COINTOSS_CONTRACT_ADDRESS as `0x${string}`,
       abi: BETBOT_ABI,
       functionName: "outcomeForPlayer",
-      args: [BigInt(betId!), BigInt(0)],
+      args: [BigInt(tossId!), BigInt(0)],
     }),
     publicClient.readContract({
       address: process.env.COINTOSS_CONTRACT_ADDRESS as `0x${string}`,
       abi: BETBOT_ABI,
       functionName: "outcomeForPlayer",
-      args: [BigInt(betId!), BigInt(1)],
+      args: [BigInt(tossId!), BigInt(1)],
     }),
   ]);
 
   const totalPlayers = outcomeOnePlayers.length + outcomeTwoPlayers.length;
 
   const buttons = [
-    <Button action="post" target={`/toss/${betId}`}>
+    <Button action="post" target={`/toss/${tossId}`}>
       ⬅️ Go back
     </Button>,
   ];
@@ -59,10 +59,10 @@ const handleRequest = frames(async (ctx) => {
           width={"100%"}
           height={"100%"}
           tw="relative">
-          <div tw="absolute relative flex justify-center w-full px-[32px]">
+          <div tw="absolute relative flex justify-center items-center w-full h-[350px] px-[36px]">
             <h1
-              tw="text-[#014601] text-[100px] uppercase text-center"
-              style={{ fontFamily: "Vanguard-Bold" }}>
+              tw="text-[#014601] text-[120px] uppercase text-center"
+              style={{ fontFamily: "Vanguard-Bold", lineHeight: "80px" }}>
               {bet.condition}
             </h1>
           </div>

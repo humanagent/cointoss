@@ -88,7 +88,7 @@ export const createToss = async (
     await publicClient.waitForTransactionReceipt({
       hash: createBetTx,
     });
-    const betId = await publicClient.readContract({
+    const tossId = await publicClient.readContract({
       address: process.env.COINTOSS_CONTRACT_ADDRESS! as `0x${string}`,
       abi: COINTOSSBOT_ABI,
       functionName: "betId",
@@ -100,7 +100,7 @@ export const createToss = async (
       await context.send(GROUP_MESSAGE_FIRST);
       await db.write();
     } else await context.send("Here is your toss!");
-    await context.send(`${process.env.FRAME_URL}/frames/toss/${betId}`);
+    await context.send(`${process.env.FRAME_URL}/frames/toss/${tossId}`);
   } catch (error) {
     console.error("Error creating toss:", error);
     await context.send(
