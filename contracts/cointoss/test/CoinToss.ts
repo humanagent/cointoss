@@ -5,135 +5,126 @@ import {
 import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { expect } from "chai";
 import hre, { ethers } from "hardhat";
-import { bytesToString } from "viem";
 
-describe("SimpleBettingBot", function () {
-  async function deployBettingBot() {
-    // Contracts are deployed using the first signer/account by default
-    const [owner, otherAccount] = await hre.ethers.getSigners();
+describe("CoinToss", function () {
+  async function deployCoinToss() {
+    const [owner, otherAccount] = await ethers.getSigners();
 
-    const BettingBot = await hre.ethers.getContractFactory("SimpleBettingBot");
-    const usdc = "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
-    const bettingBot = await BettingBot.deploy(usdc);
-    const erc20 = await ethers.getContractAt("IERC20", "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913");
+    const CoinToss = await ethers.getContractFactory("CoinToss");
+    const usdcAddress = "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"; // USDC on Arbitrum
+    const maxTossingAmountPerOutcome = 10000000;
+    const coinToss = await CoinToss.deploy(usdcAddress, maxTossingAmountPerOutcome);
 
-    return { bettingBot, owner, otherAccount, erc20 };
+    const usdc = await ethers.getContractAt("IERC20", usdcAddress);
+
+    return { coinToss, owner, otherAccount, usdc, maxTossingAmountPerOutcome };
   }
 
   describe("Deployment", function () {
-    it(" Deployment", async function () {
-      const { bettingBot } = await loadFixture(deployBettingBot);
-      expect(await bettingBot.betId()).to.equal(0);
+    it("Should set the correct tossing token and max tossing amount", async function () {
+      const { coinToss, usdc, maxTossingAmountPerOutcome } = await loadFixture(deployCoinToss);
+      expect(await coinToss.tossingTokenAddress()).to.equal(usdc);
+      expect(await coinToss.maxTossingAmountPerOutcome()).to.equal(maxTossingAmountPerOutcome);
+    });
+
+    it("Should initialize tossId to 0", async function () {
+      const { coinToss } = await loadFixture(deployCoinToss);
+      expect(await coinToss.tossId()).to.equal(0);
     });
   });
 
-  describe("Create Bet", function () {
-      describe("Create standard bet", function () {
-        it("Should create a bet", async function () {
-          const { bettingBot, owner } = await loadFixture(deployBettingBot);
-          // create bet params
-          const groupId = 1;
-          const condition = ("test");
-          console.log("condition", condition);
-          const outcome1 = ("test1");
-          console.log("outcome1", outcome1);
-          const outcome2 = ("test2");
-          console.log("outcome2", outcome2);
-          const outcomes = [outcome1, outcome2];
-          const bettingOdds = [1000, 1000];
-          const endTime = 1722893821;
-          const adminOutcome = 0;
-          // static call to get betId
-          const betId = await bettingBot.createBet.staticCall(owner, condition, outcomes, bettingOdds/*, endTime*/, adminOutcome);
-          console.log("betId", betId);
-          // create bet
-          await bettingBot.createBet(owner, condition, outcomes, bettingOdds, /*, endTime*/adminOutcome);
-          expect(betId).to.equal(1);
-          const outcomesResult = await bettingBot.bets(1);
-          const betOutcomes0 = await bettingBot.outcomesBet(1, 0);
-          const betOutcomes1 = await bettingBot.outcomesBet(1, 1);
-          const bettingAmmounts0 = await bettingBot.bettingAmountsBet(1, 0);
-          const bettingAmmounts1 = await bettingBot.bettingAmountsBet(1, 1);
-          const betInfo = await bettingBot.betInfo(1);
-          
-          expect(outcomesResult.condition).to.equal(condition);
-        });
-        it("Should create multiple bets", async function () {
-          const { bettingBot, owner } = await loadFixture(deployBettingBot);
-          // create bet params
-          const groupId = 1;
-          const condition = ("test");
-          const outcome1 = ("test1");
-          const outcome2 = ("test2");
-          const outcomes = [outcome1, outcome2];
-          const bettingOdds = [1000, 1000];
-          const startTime = 0;
-          const endTime = 1722893821;
-          const bettingToken = "0x9e6be44cc1236eef7e1f197418592d363bedcd5a" // test token address
-          const adminOutcome = 0;
-          // static call to get betId
-          const betId = await bettingBot.createBet.staticCall(owner, condition, outcomes, bettingOdds, /*, endTime*/ adminOutcome);
-          // create bet
-          await bettingBot.createBet(owner, condition, outcomes, bettingOdds, /*, endTime*/ adminOutcome);
-          expect(betId).to.equal(1);
-          // static call to get betId
-          const betId2 = await bettingBot.createBet.staticCall(owner, condition, outcomes, bettingOdds, /*, endTime*/ adminOutcome);
-          // create bet
-          await bettingBot.createBet(owner, condition, outcomes, bettingOdds, /*, endTime*/ adminOutcome);
-          expect(betId2).to.equal(2);
-          // static call to get betId
-          const betId3 = await bettingBot.createBet.staticCall(owner, condition, outcomes, bettingOdds, /*, endTime*/ adminOutcome);
-          // create bet
-          await bettingBot.createBet(owner, condition, outcomes, bettingOdds, /*, endTime*/ adminOutcome);
-          expect(betId3).to.equal(3);
-        });
-        it("should not create a bet if outcomes and betting amount are different", async function () {
-          const { bettingBot, owner } = await loadFixture(deployBettingBot);
-          // create bet params
-          const groupId = 1;
-          const condition = ("test");
-          const outcome1 = ("test1");
-          const outcomes = [outcome1];
-          const bettingOdds = [1000, 1000];
-          const startTime = 0;
-          const endTime = 1722893821;
-          const bettingToken = "0x9e6be44cc1236eef7e1f197418592d363bedcd5a" // test token address
-          const adminOutcome = 0;
-          // create bet
-          await expect(bettingBot.createBet(owner, condition, outcomes, bettingOdds, /*, endTime*/ adminOutcome)).to.be.revertedWith("Outcomes and betting amounts length mismatch");
-        });
-        it("should not create a bet if outcomes is 1", async function () {
-          const { bettingBot, owner } = await loadFixture(deployBettingBot);
-          // create bet params
-          const groupId = 1;
-          const condition = ("test");
-          const outcome1 = ("test1");
-          const outcomes = [outcome1];
-          const bettingOdds = [1000];
-          const startTime = 0;
-          const endTime = 1722893821;
-          const bettingToken = "0x9e6be44cc1236eef7e1f197418592d363bedcd5a" // test token address
-          const adminOutcome = 0;
-          // create bet
-          await expect(bettingBot.createBet(owner, condition, outcomes, bettingOdds, /*, endTime*/ adminOutcome)).to.be.revertedWith("At least 2 outcomes required");
-        });
-        
-        it("should not create a bet if end time is in the past", async function () {
-          const { bettingBot, owner } = await loadFixture(deployBettingBot);
-          // create bet params
-          const groupId = 1;
-          const condition = ("test");
-          const outcome1 = ("test1");
-          const outcome2 = ("test2");
-          const outcomes = [outcome1, outcome2];
-          const bettingOdds = [1000, 1000];
-          const startTime = 0;
-          const endTime = 32323;
-          const bettingToken = "0x9e6be44cc1236eef7e1f197418592d363bedcd5a" // test token address
-          const adminOutcome = 0;
-          // create bet
-          await expect(bettingBot.createBet(owner, condition, outcomes, bettingOdds, /*, endTime*/ adminOutcome)).to.be.revertedWith("End time must be in the future");
-        });
-      });
+  describe("Create Toss", function () {
+    it("Should create a toss", async function () {
+      const { coinToss, owner, maxTossingAmountPerOutcome } = await loadFixture(deployCoinToss);
+      const condition = "Will it rain tomorrow?";
+      const outcomes = ["Yes", "No"];
+      const tossingAmounts = [maxTossingAmountPerOutcome, maxTossingAmountPerOutcome];
+      const endTime = Math.floor(Date.now() / 1000) + 86400; // 24 hours from now
+      const adminOutcome = 0; // Admin doesn't bet
+
+      await expect(coinToss.createToss(owner.address, condition, outcomes, tossingAmounts, endTime, adminOutcome))
+        .to.emit(coinToss, "TossCreated")
+        .withArgs(owner.address, 1, condition, outcomes, tossingAmounts, anyValue);
+
+      const [tossInfo, tossOutcomes, tossTossingAmounts] = await coinToss.tossInfo(1);
+      expect(tossInfo.admin).to.equal(owner.address);
+      expect(tossInfo.condition).to.equal(condition);
+      expect(tossOutcomes).to.deep.equal(outcomes);
+      expect(tossTossingAmounts).to.deep.equal(tossingAmounts);
+    });
+
+    it("Should revert if outcomes and tossing amounts mismatch", async function () {
+      const { coinToss, owner, maxTossingAmountPerOutcome } = await loadFixture(deployCoinToss);
+      const condition = "Will it rain tomorrow?";
+      const outcomes = ["Yes", "No"];
+      const tossingAmounts = [maxTossingAmountPerOutcome]; // Only one amount
+      const endTime = Math.floor(Date.now() / 1000) + 86400;
+      const adminOutcome = 0;
+
+      await expect(coinToss.createToss(owner.address, condition, outcomes, tossingAmounts, endTime, adminOutcome))
+        .to.be.revertedWithCustomError(coinToss, "OutcomesAndAmountsMismatch");
+    });
+
+    it("Should revert if less than two outcomes", async function () {
+      const { coinToss, owner, maxTossingAmountPerOutcome } = await loadFixture(deployCoinToss);
+      const condition = "Will it rain tomorrow?";
+      const outcomes = ["Yes"];
+      const tossingAmounts = [maxTossingAmountPerOutcome];
+      const endTime = Math.floor(Date.now() / 1000) + 86400;
+      const adminOutcome = 0;
+
+      await expect(coinToss.createToss(owner.address, condition, outcomes, tossingAmounts, endTime, adminOutcome))
+        .to.be.revertedWithCustomError(coinToss, "AtLeastTwoOutcomesRequired");
+    });
   });
+
+  describe("Place Toss", function () {
+    it("Should allow a player to place a toss", async function () {
+      const { coinToss, owner, otherAccount, usdc, maxTossingAmountPerOutcome } = await loadFixture(deployCoinToss);
+      
+      // Create a toss
+      const condition = "Will it rain tomorrow?";
+      const outcomes = ["Yes", "No"];
+      const tossingAmounts = [maxTossingAmountPerOutcome, maxTossingAmountPerOutcome];
+      const endTime = Math.floor(Date.now() / 1000) + 86400;
+      const adminOutcome = 0;
+
+      await coinToss.createToss(owner.address, condition, outcomes, tossingAmounts, endTime, adminOutcome);
+
+      // Approve USDC spending
+      await usdc.connect(otherAccount).approve(coinToss.target, ethers.parseUnits("10", 6));
+
+      // Place a toss
+      await expect(coinToss.connect(otherAccount).placeToss(1, 0))
+        .to.emit(coinToss, "TossPlaced")
+        .withArgs(1, otherAccount.address, 0, ethers.parseUnits("10", 6));
+
+      expect(await coinToss.playerToss(otherAccount.address, 1)).to.equal(0);
+    });
+
+    it("Should revert if player tries to toss twice", async function () {
+      const { coinToss, owner, otherAccount, usdc } = await loadFixture(deployCoinToss);
+      
+      // Create a toss
+      const condition = "Will it rain tomorrow?";
+      const outcomes = ["Yes", "No"];
+      const tossingAmounts = [ethers.parseUnits("10", 6), ethers.parseUnits("10", 6)];
+      const endTime = Math.floor(Date.now() / 1000) + 86400;
+      const adminOutcome = 0;
+
+      await coinToss.createToss(owner.address, condition, outcomes, tossingAmounts, endTime, adminOutcome);
+
+      // Approve USDC spending
+      await usdc.connect(otherAccount).approve(coinToss.target, ethers.parseUnits("20", 6));
+
+      // Place a toss
+      await coinToss.connect(otherAccount).placeToss(1, 0);
+
+      // Try to place another toss
+      await expect(coinToss.connect(otherAccount).placeToss(1, 1))
+        .to.be.revertedWithCustomError(coinToss, "PlayerAlreadyTossed");
+    });
+  });
+
+  // Add more test cases for other functions like resolveToss, distributeWinnings, etc.
 });

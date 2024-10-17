@@ -87,7 +87,7 @@ contract CoinToss {
     uint256 public tossId;
 
     // Maximum amount that can be toss per outcome
-    uint256 maxTossingAmountPerOutcome;
+    uint256 public maxTossingAmountPerOutcome;
     
     // Maximum number of players allowed per outcome
     uint256 MAX_PLAYERS_FOR_OUTCOME_LENGTH = 10;
