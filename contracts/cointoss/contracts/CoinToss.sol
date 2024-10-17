@@ -21,10 +21,12 @@ contract CoinToss {
     error TossAlreadyEnded();
     error InvalidOutcomeIndex();
     error PlayerAlreadyTossed();
+    error PlayerDidNotToss();
     error MaxPlayersReached();
     error OnlyAdmin();
     error TossNotResolved();
     error TossNotEnded();
+    error TossNotPaused();
     
     //║══════════════════════════════════════════╗
     //║              Events                      ║
