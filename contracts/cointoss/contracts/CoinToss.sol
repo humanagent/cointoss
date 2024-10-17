@@ -3,6 +3,7 @@ pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
 
 contract CoinToss {
 
@@ -197,6 +198,61 @@ contract CoinToss {
         return tossId;
     }
 
+        /**
+     * @notice Creates a new toss with the specified parameters using Permit approval. It only works with tokens supporting Permit approval (eg. USDC)
+     * @param admin Address of the toss creator
+     * @param condition Description of the toss condition
+     * @param outcomes Array of possible outcomes
+     * @param tossingAmounts Array of corresponding betting amounts for each outcome
+     * @param endTime Timestamp when the toss ends
+     * @param adminOutcome Index of the outcome the admin bets on, if any (1-indexed)
+     * @return The ID of the newly created toss
+     * @param v of the signature
+     * @param r of the signature
+     * @param s of the signature
+     * @param permitDeadline - deadline of the signature
+     */
+    function createTossWithPermit(
+        address admin,
+        string memory condition,
+        string[] memory outcomes,
+        uint256[] memory tossingAmounts,
+        uint256 endTime,
+        uint256 adminOutcome,
+        uint8 v,
+        bytes32 r,
+        bytes32 s,
+        uint256 permitDeadline
+    ) public returns (uint256) {
+        // Validate toss parameters before creating
+        _validateTossParameters(admin, condition, outcomes, tossingAmounts, endTime, adminOutcome);
+        
+        tossId++;  // Increment the toss ID counter
+        
+        // Store the new toss information in the contract's state
+        tosses[tossId] = Toss({
+            admin: admin,
+            condition: condition,
+            outcomeIndex: 0,
+            totalTossingAmount: 0,
+            endTime: endTime,
+            status: TossStatus.CREATED
+        });
+        
+        // Store the outcomes and amounts for this toss
+        outcomesToss[tossId] = outcomes;
+        tossingAmountsToss[tossId] = tossingAmounts;
+
+        // If the admin has placed a bet, record it
+        if (adminOutcome != 0) {
+            placeTossWithPermit(tossId, (adminOutcome - 1), v, r, s, permitDeadline);
+        }
+
+        // Emit event for toss creation
+        emit TossCreated(admin, tossId, condition, outcomes, tossingAmounts, block.timestamp);
+        return tossId;
+    }
+
     /**
      * @notice Updates the metadata (condition and outcomes) for a toss
      * @param id The ID of the toss to update
@@ -227,22 +283,73 @@ contract CoinToss {
 
         // Various validation checks before placing the bet
         if (toss.status != TossStatus.CREATED) revert TossAlreadyResolved();
-        if (toss.endTime <= block.timestamp) revert TossAlreadyEnded();
         if (outcomeIndex >= outcomesToss[id].length) revert InvalidOutcomeIndex();
         if (playerHasTossed[msg.sender][id]) revert PlayerAlreadyTossed();
         if (outcomeForPlayers[id][outcomeIndex].length >= MAX_PLAYERS_FOR_OUTCOME_LENGTH) revert MaxPlayersReached();
-
+        // Adjusted logic to check endTime only if it's set
+        if (toss.endTime != 0) {
+            if (toss.endTime < block.timestamp) revert TossAlreadyEnded();
+        }
+        // Get amount from the toss
+        uint256 amount = tossingAmountsToss[id][outcomeIndex]; 
         // Transfer the betting amount from the player to the contract
         IERC20 token = IERC20(tossingTokenAddress);
-        token.safeTransferFrom(msg.sender, address(this), tossingAmountsToss[id][outcomeIndex]);
+        token.safeTransferFrom(msg.sender, address(this), amount);
         
         // Update toss state with the player's bet
-        toss.totalTossingAmount += tossingAmountsToss[id][outcomeIndex];
+        toss.totalTossingAmount += amount;
         playersToss[msg.sender][id] = outcomeIndex;
         outcomeForPlayers[id][outcomeIndex].push(msg.sender);
         playerHasTossed[msg.sender][id] = true;
         
-        emit TossPlaced(id, msg.sender, outcomeIndex, tossingAmountsToss[id][outcomeIndex]);
+        emit TossPlaced(id, msg.sender, outcomeIndex, amount);
+    }
+
+    /**
+     * @notice Place a bet on a specific outcome for a toss. It only works with tokens supporting Permit approval (eg. USDC)
+     * @param id The ID of the toss
+     * @param outcomeIndex The index of the outcome to bet on
+     * @param v of the signature
+     * @param r of the signature
+     * @param s of the signature
+     * @param permitDeadline - deadline of the signature
+     */
+    function placeTossWithPermit(
+        uint256 id, 
+        uint256 outcomeIndex,
+        uint8 v,
+        bytes32 r,
+        bytes32 s,
+        uint256 permitDeadline
+    ) public {
+        Toss storage toss = tosses[id];
+
+        // Various validation checks before placing the bet
+        if (toss.status != TossStatus.CREATED) revert TossAlreadyResolved();
+        if (outcomeIndex >= outcomesToss[id].length) revert InvalidOutcomeIndex();
+        if (playerHasTossed[msg.sender][id]) revert PlayerAlreadyTossed();
+        if (outcomeForPlayers[id][outcomeIndex].length >= MAX_PLAYERS_FOR_OUTCOME_LENGTH) revert MaxPlayersReached();
+        // Adjusted logic to check endTime only if it's set
+        if (toss.endTime != 0) {
+            if (toss.endTime < block.timestamp) revert TossAlreadyEnded(); 
+        }
+        // Get amount from the toss
+        uint256 amount = tossingAmountsToss[id][outcomeIndex]; 
+
+        // Permit approval
+        IERC20Permit(tossingTokenAddress).permit(msg.sender, address(this), amount, permitDeadline, v, r, s);
+
+        // Transfer the betting amount from the player to the contract
+        IERC20 token = IERC20(tossingTokenAddress);
+        token.safeTransferFrom(msg.sender, address(this), amount);
+        
+        // Update toss state with the player's bet
+        toss.totalTossingAmount += amount;
+        playersToss[msg.sender][id] = outcomeIndex;
+        outcomeForPlayers[id][outcomeIndex].push(msg.sender);
+        playerHasTossed[msg.sender][id] = true;
+        
+        emit TossPlaced(id, msg.sender, outcomeIndex, amount);
     }
 
    /**
@@ -253,8 +360,8 @@ contract CoinToss {
         uint256 id
     ) public {
         Toss storage toss = tosses[id];
-        require(toss.status == TossStatus.CREATED, "Toss is already resolved"); 
-        require(msg.sender == toss.admin, "Only admin can withdraw toss");
+        if(toss.status != TossStatus.CREATED) revert TossAlreadyResolved();
+        if(msg.sender != toss.admin) revert InvalidAdminAddress();
 
         uint256 outcomesLength = outcomesToss[id].length;
         IERC20 token = IERC20(tossingTokenAddress);
@@ -282,10 +389,13 @@ contract CoinToss {
         bool distribute
     ) public {
         Toss storage toss = tosses[id];
-        require(toss.status == TossStatus.CREATED, "Toss is already resolved");
-        require(msg.sender == toss.admin, "Only admin can resolve the toss");
-        require(toss.endTime < block.timestamp, "Toss is not ended");
-        require(outcomeIndex < outcomesToss[id].length, "Invalid outcomeIndex");
+        if(toss.status != TossStatus.CREATED) revert TossAlreadyResolved();
+        if(msg.sender != toss.admin) revert InvalidAdminAddress();
+        if(outcomeIndex >= outcomesToss[id].length) revert InvalidOutcomeIndex(); 
+        // Adjusted logic to check endTime only if it's set
+        if (toss.endTime != 0) {
+            if (toss.endTime > block.timestamp) revert TossNotEnded(); 
+        }
         
         uint256 tossingAmount = tossingAmountsToss[id][outcomeIndex];
         toss.outcomeIndex = outcomeIndex;
@@ -309,7 +419,7 @@ contract CoinToss {
         uint256 id
     ) public {
         Toss storage toss = tosses[id];
-        require(toss.status == TossStatus.RESOLVED, "Toss is not resolved"); 
+        if(toss.status != TossStatus.RESOLVED) revert TossNotResolved(); 
         _distributeWinnings(toss, id);
         toss.status = TossStatus.PAID;
     }
@@ -377,7 +487,7 @@ contract CoinToss {
         if (outcomes.length != tossingAmounts.length) revert OutcomesAndAmountsMismatch();
         if (outcomes.length < 2) revert AtLeastTwoOutcomesRequired();
         if (adminOutcome > outcomes.length) revert InvalidAdminOutcome();
-        if (endTime <= block.timestamp) revert EndTimeInPast();
+        if (endTime <= block.timestamp && endTime != 0) revert EndTimeInPast(); //o zero o valido 
         
         // Ensure each betting amount is within the allowed limit
         for (uint256 i = 0; i < tossingAmounts.length; i++) {
