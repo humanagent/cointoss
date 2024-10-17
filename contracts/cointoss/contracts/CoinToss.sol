@@ -283,11 +283,13 @@ contract CoinToss {
 
         // Various validation checks before placing the bet
         if (toss.status != TossStatus.CREATED) revert TossAlreadyResolved();
-        if (toss.endTime <= block.timestamp) revert TossAlreadyEnded();
         if (outcomeIndex >= outcomesToss[id].length) revert InvalidOutcomeIndex();
         if (playerHasTossed[msg.sender][id]) revert PlayerAlreadyTossed();
         if (outcomeForPlayers[id][outcomeIndex].length >= MAX_PLAYERS_FOR_OUTCOME_LENGTH) revert MaxPlayersReached();
-
+        // Adjusted logic to check endTime only if it's set
+        if (toss.endTime != 0) {
+            if (toss.endTime < block.timestamp) revert TossAlreadyEnded();
+        }
         // Get amount from the toss
         uint256 amount = tossingAmountsToss[id][outcomeIndex]; 
         // Transfer the betting amount from the player to the contract
@@ -324,11 +326,13 @@ contract CoinToss {
 
         // Various validation checks before placing the bet
         if (toss.status != TossStatus.CREATED) revert TossAlreadyResolved();
-        if (toss.endTime <= block.timestamp) revert TossAlreadyEnded();
         if (outcomeIndex >= outcomesToss[id].length) revert InvalidOutcomeIndex();
         if (playerHasTossed[msg.sender][id]) revert PlayerAlreadyTossed();
         if (outcomeForPlayers[id][outcomeIndex].length >= MAX_PLAYERS_FOR_OUTCOME_LENGTH) revert MaxPlayersReached();
-
+        // Adjusted logic to check endTime only if it's set
+        if (toss.endTime != 0) {
+            if (toss.endTime < block.timestamp) revert TossAlreadyEnded(); 
+        }
         // Get amount from the toss
         uint256 amount = tossingAmountsToss[id][outcomeIndex]; 
 
@@ -356,8 +360,8 @@ contract CoinToss {
         uint256 id
     ) public {
         Toss storage toss = tosses[id];
-        require(toss.status == TossStatus.CREATED, "Toss is already resolved"); 
-        require(msg.sender == toss.admin, "Only admin can withdraw toss");
+        if(toss.status != TossStatus.CREATED) revert TossAlreadyResolved();
+        if(msg.sender != toss.admin) revert InvalidAdminAddress();
 
         uint256 outcomesLength = outcomesToss[id].length;
         IERC20 token = IERC20(tossingTokenAddress);
@@ -385,10 +389,13 @@ contract CoinToss {
         bool distribute
     ) public {
         Toss storage toss = tosses[id];
-        require(toss.status == TossStatus.CREATED, "Toss is already resolved");
-        require(msg.sender == toss.admin, "Only admin can resolve the toss");
-        require(toss.endTime < block.timestamp, "Toss is not ended");
-        require(outcomeIndex < outcomesToss[id].length, "Invalid outcomeIndex");
+        if(toss.status != TossStatus.CREATED) revert TossAlreadyResolved();
+        if(msg.sender != toss.admin) revert InvalidAdminAddress();
+        if(outcomeIndex >= outcomesToss[id].length) revert InvalidOutcomeIndex(); 
+        // Adjusted logic to check endTime only if it's set
+        if (toss.endTime != 0) {
+            if (toss.endTime > block.timestamp) revert TossNotEnded(); 
+        }
         
         uint256 tossingAmount = tossingAmountsToss[id][outcomeIndex];
         toss.outcomeIndex = outcomeIndex;
@@ -412,7 +419,7 @@ contract CoinToss {
         uint256 id
     ) public {
         Toss storage toss = tosses[id];
-        require(toss.status == TossStatus.RESOLVED, "Toss is not resolved"); 
+        if(toss.status != TossStatus.RESOLVED) revert TossNotResolved(); 
         _distributeWinnings(toss, id);
         toss.status = TossStatus.PAID;
     }
@@ -480,7 +487,7 @@ contract CoinToss {
         if (outcomes.length != tossingAmounts.length) revert OutcomesAndAmountsMismatch();
         if (outcomes.length < 2) revert AtLeastTwoOutcomesRequired();
         if (adminOutcome > outcomes.length) revert InvalidAdminOutcome();
-        if (endTime <= block.timestamp) revert EndTimeInPast();
+        if (endTime <= block.timestamp && endTime != 0) revert EndTimeInPast(); //o zero o valido 
         
         // Ensure each betting amount is within the allowed limit
         for (uint256 i = 0; i < tossingAmounts.length; i++) {
