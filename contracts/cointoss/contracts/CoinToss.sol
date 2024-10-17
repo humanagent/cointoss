@@ -62,7 +62,7 @@ contract CoinToss {
         address admin;                 // Address of the toss creator/admin
         string condition;              // Description or condition of the toss
         uint256 outcomeIndex;          // Index of the winning outcome
-        uint256 totalTossingAmount;    // Total amount bet on this toss
+        uint256 totalTossingAmount;    // Total amount toss on this toss
         uint256 endTime;               // End time for the toss
         TossStatus status;             // Current status of the toss
     }
@@ -71,9 +71,9 @@ contract CoinToss {
     //║             Storage                      ║
     //║══════════════════════════════════════════╝
     mapping(uint256 => Toss) public tosses;  // Mapping of toss ID to Toss struct
-    mapping(address => mapping(uint256 => uint256)) public playersToss;  // Mapping of player address to their toss bet
+    mapping(address => mapping(uint256 => uint256)) public playersToss;  // Mapping of player address to their toss toss
     mapping(uint256 => mapping(uint256 => address[])) public outcomeForPlayers;  // Players associated with each outcome
-    mapping(address => mapping(uint256 => bool)) public playerHasTossed;  // Tracks if a player has already bet on a toss
+    mapping(address => mapping(uint256 => bool)) public playerHasTossed;  // Tracks if a player has already placed a toss
 
     mapping(uint256 => string[]) public outcomesToss;  // Available outcomes for each toss
     mapping(uint256 => uint256[]) public tossingAmountsToss;  // Corresponding betting amounts for each outcome
@@ -84,7 +84,7 @@ contract CoinToss {
     // Counter for the number of tosses created
     uint256 public tossId;
 
-    // Maximum amount that can be bet per outcome
+    // Maximum amount that can be toss per outcome
     uint256 maxTossingAmountPerOutcome;
     
     // Maximum number of players allowed per outcome
@@ -188,7 +188,7 @@ contract CoinToss {
         outcomesToss[tossId] = outcomes;
         tossingAmountsToss[tossId] = tossingAmounts;
 
-        // If the admin has placed a bet, record it
+        // If the admin has placed a toss, record it
         if (adminOutcome != 0) {
             placeToss(tossId, (adminOutcome - 1));
         }
@@ -198,7 +198,7 @@ contract CoinToss {
         return tossId;
     }
 
-        /**
+    /**
      * @notice Creates a new toss with the specified parameters using Permit approval. It only works with tokens supporting Permit approval (eg. USDC)
      * @param admin Address of the toss creator
      * @param condition Description of the toss condition
@@ -243,7 +243,7 @@ contract CoinToss {
         outcomesToss[tossId] = outcomes;
         tossingAmountsToss[tossId] = tossingAmounts;
 
-        // If the admin has placed a bet, record it
+        // If the admin has placed a toss, record it
         if (adminOutcome != 0) {
             placeTossWithPermit(tossId, (adminOutcome - 1), v, r, s, permitDeadline);
         }
@@ -271,9 +271,9 @@ contract CoinToss {
     }
 
     /**
-     * @notice Place a bet on a specific outcome for a toss
+     * @notice Place a toss on a specific outcome for a toss
      * @param id The ID of the toss
-     * @param outcomeIndex The index of the outcome to bet on
+     * @param outcomeIndex The index of the outcome to toss on
      */
     function placeToss(
         uint256 id, 
@@ -281,7 +281,7 @@ contract CoinToss {
     ) public {
         Toss storage toss = tosses[id];
 
-        // Various validation checks before placing the bet
+        // Various validation checks before placing the toss
         if (toss.status != TossStatus.CREATED) revert TossAlreadyResolved();
         if (outcomeIndex >= outcomesToss[id].length) revert InvalidOutcomeIndex();
         if (playerHasTossed[msg.sender][id]) revert PlayerAlreadyTossed();
@@ -296,7 +296,7 @@ contract CoinToss {
         IERC20 token = IERC20(tossingTokenAddress);
         token.safeTransferFrom(msg.sender, address(this), amount);
         
-        // Update toss state with the player's bet
+        // Update toss state with the player's toss
         toss.totalTossingAmount += amount;
         playersToss[msg.sender][id] = outcomeIndex;
         outcomeForPlayers[id][outcomeIndex].push(msg.sender);
@@ -306,9 +306,9 @@ contract CoinToss {
     }
 
     /**
-     * @notice Place a bet on a specific outcome for a toss. It only works with tokens supporting Permit approval (eg. USDC)
+     * @notice Place a toss on a specific outcome for a toss. It only works with tokens supporting Permit approval (eg. USDC)
      * @param id The ID of the toss
-     * @param outcomeIndex The index of the outcome to bet on
+     * @param outcomeIndex The index of the outcome to toss on
      * @param v of the signature
      * @param r of the signature
      * @param s of the signature
@@ -324,7 +324,7 @@ contract CoinToss {
     ) public {
         Toss storage toss = tosses[id];
 
-        // Various validation checks before placing the bet
+        // Various validation checks before placing the toss
         if (toss.status != TossStatus.CREATED) revert TossAlreadyResolved();
         if (outcomeIndex >= outcomesToss[id].length) revert InvalidOutcomeIndex();
         if (playerHasTossed[msg.sender][id]) revert PlayerAlreadyTossed();
@@ -343,7 +343,7 @@ contract CoinToss {
         IERC20 token = IERC20(tossingTokenAddress);
         token.safeTransferFrom(msg.sender, address(this), amount);
         
-        // Update toss state with the player's bet
+        // Update toss state with the player's toss
         toss.totalTossingAmount += amount;
         playersToss[msg.sender][id] = outcomeIndex;
         outcomeForPlayers[id][outcomeIndex].push(msg.sender);
@@ -356,7 +356,7 @@ contract CoinToss {
      * @dev Allows the admin to withdraw from a toss being paused and return the tossing amounts to players.
      * @param id The ID of the toss to withdraw.
      */
-    function adminWithdrawPausedToss(
+    function adminReturnToss(
         uint256 id
     ) public {
         Toss storage toss = tosses[id];
@@ -373,8 +373,45 @@ contract CoinToss {
             }
         }
 
+        toss.status = TossStatus.PAID;
+        emit TossPaused(id);
+    }
+
+    /**
+     * @dev Allows the admin to set a toss as paused.
+     * @param id The ID of the toss to pause.
+     */
+    function adminPauseToss(
+        uint256 id
+    ) public {
+        Toss storage toss = tosses[id];
+        if(toss.status != TossStatus.CREATED) revert TossAlreadyResolved();
+        if(msg.sender != toss.admin) revert InvalidAdminAddress();
+
         toss.status = TossStatus.PAUSED;
         emit TossPaused(id);
+    }
+
+    /**
+     * @dev Allows players to claim their tokens back from a paused toss.
+     * @param id The ID of the paused toss.
+     */
+    function claimTokensFromPausedToss(
+        uint256 id
+    ) public {
+        Toss storage toss = tosses[id];
+        if(toss.status != TossStatus.PAUSED) revert TossNotPaused();
+        if(!playerHasTossed[msg.sender][id]) revert PlayerDidNotToss();
+
+        uint256 outcomeIndex = playersToss[msg.sender][id];
+        uint256 amount = tossingAmountsToss[id][outcomeIndex];
+
+        // Transfer the betting amount back to the player
+        IERC20 token = IERC20(tossingTokenAddress);
+        token.safeTransfer(msg.sender, amount);
+
+        // Mark the player as having claimed their tokens
+        playerHasTossed[msg.sender][id] = false;
     }
 
     /**
