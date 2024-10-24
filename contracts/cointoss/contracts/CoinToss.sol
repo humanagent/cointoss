@@ -5,97 +5,37 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
 
-contract CoinToss {
+import "./ICointoss.sol";
 
-    //║══════════════════════════════════════════╗
-    //║              Errors                      ║
-    //║══════════════════════════════════════════╝
-    error InvalidAdminAddress();
-    error InvalidCondition();
-    error OutcomesAndAmountsMismatch();
-    error AtLeastTwoOutcomesRequired();
-    error InvalidAdminOutcome();
-    error EndTimeInPast();
-    error TossingAmountExceedsMax();
-    error TossAlreadyResolved();
-    error TossAlreadyEnded();
-    error InvalidOutcomeIndex();
-    error PlayerAlreadyTossed();
-    error PlayerDidNotToss();
-    error MaxPlayersReached();
-    error OnlyAdmin();
-    error TossNotResolved();
-    error TossNotEnded();
-    error TossNotPaused();
-    
-    //║══════════════════════════════════════════╗
-    //║              Events                      ║
-    //║══════════════════════════════════════════╝
-    event TossCreated(
-        address admin,
-        uint256 indexed tossId,
-        string condition,
-        string[] outcomes,
-        uint256[] tossingAmounts,
-        uint256 startTime
-    );
-    
-    event TossPlaced(
-        uint256 indexed tossId,
-        address indexed player,
-        uint256 outcomeIndex,
-        uint256 tossingAmount
-    );
-    
-    event TossWithdrawn(uint256 indexed tossId, address indexed player);
-    event TossPaused(uint256 indexed tossId);
-    event TossPaid(uint256 indexed tossId);
-
-    // Enumeration to represent the status of a coin toss
-    enum TossStatus {
-        CREATED,   // Toss has been created but is ongoing
-        PAID,      // Winnings have been paid out
-        PAUSED,    // Toss has been paused
-        RESOLVED   // Toss has been resolved, but winnings not yet paid
-    }
-
-    // Structure to represent a toss
-    struct Toss {
-        address admin;                 // Address of the toss creator/admin
-        string condition;              // Description or condition of the toss
-        uint256 outcomeIndex;          // Index of the winning outcome
-        uint256 totalTossingAmount;    // Total amount toss on this toss
-        uint256 endTime;               // End time for the toss
-        TossStatus status;             // Current status of the toss
-    }
+contract CoinToss is ICointoss {
 
     //║══════════════════════════════════════════╗
     //║             Storage                      ║
     //║══════════════════════════════════════════╝
-    mapping(uint256 => Toss) public tosses;  // Mapping of toss ID to Toss struct
-    mapping(address => mapping(uint256 => uint256)) public playersToss;  // Mapping of player address to their toss toss
-    mapping(uint256 => mapping(uint256 => address[])) public outcomeForPlayers;  // Players associated with each outcome
-    mapping(address => mapping(uint256 => bool)) public playerHasTossed;  // Tracks if a player has already placed a toss
+    mapping(uint256 => Toss) public tosses;  //Mapping of toss ID to Toss struct
+    mapping(address => mapping(uint256 => uint256)) public playersToss;  //Mapping of player address to their toss toss
+    mapping(uint256 => mapping(uint256 => address[])) public outcomeForPlayers;  //Players associated with each outcome
+    mapping(address => mapping(uint256 => bool)) public playerHasTossed;  //Tracks if a player has already placed a toss
 
-    mapping(uint256 => string[]) public outcomesToss;  // Available outcomes for each toss
-    mapping(uint256 => uint256[]) public tossingAmountsToss;  // Corresponding betting amounts for each outcome
+    mapping(uint256 => string[]) public outcomesToss;  //Available outcomes for each toss
+    mapping(uint256 => uint256[]) public tossingAmountsToss;  //Corresponding betting amounts for each outcome
 
-    // Address of the ERC20 token used for betting
+    //Address of the ERC20 token used for betting
     address public tossingTokenAddress;
     
-    // Counter for the number of tosses created
+    //Counter for the number of tosses created
     uint256 public tossId;
 
-    // Maximum amount that can be toss per outcome
+    //Maximum amount that can be toss per outcome
     uint256 public maxTossingAmountPerOutcome;
     
-    // Maximum number of players allowed per outcome
+    //Maximum number of players allowed per outcome
     uint256 MAX_PLAYERS_FOR_OUTCOME_LENGTH = 10;
 
-    // Using SafeERC20 to handle ERC20 token transfers safely
+    //Using SafeERC20 to handle ERC20 token transfers safely
     using SafeERC20 for IERC20;
 
-    // Constructor
+    //Constructor
     /**
      * @dev Initializes the contract with the default tossing token address.
      * @param _tossingTokenAddress The address of the ERC20 token to be used for tossing.
@@ -150,8 +90,12 @@ contract CoinToss {
     }
 
     //║══════════════════════════════════════════╗
-    //║            Users Functions               ║
+    //║            Write Functions               ║
     //║══════════════════════════════════════════╝
+
+    //Admin functions: createToss, createTossWithPermit, changeTossMetadata, resolveToss, adminReturnToss, adminPauseToss
+    //Player functions: placeToss, placeTossWithPermit, claimTokensFromPausedToss
+    //Other public functions: distributeWinnings
 
     /**
      * @notice Creates a new toss with the specified parameters
@@ -171,12 +115,12 @@ contract CoinToss {
         uint256 endTime,
         uint256 adminOutcome
     ) public returns (uint256) {
-        // Validate toss parameters before creating
+        //Validate toss parameters before creating
         _validateTossParameters(admin, condition, outcomes, tossingAmounts, endTime, adminOutcome);
         
-        tossId++;  // Increment the toss ID counter
+        tossId++;  //Increment the toss ID counter
         
-        // Store the new toss information in the contract's state
+        //Store the new toss information in the contract's state
         tosses[tossId] = Toss({
             admin: admin,
             condition: condition,
@@ -186,16 +130,16 @@ contract CoinToss {
             status: TossStatus.CREATED
         });
         
-        // Store the outcomes and amounts for this toss
+        //Store the outcomes and amounts for this toss
         outcomesToss[tossId] = outcomes;
         tossingAmountsToss[tossId] = tossingAmounts;
 
-        // If the admin has placed a toss, record it
+        //If the admin has placed a toss, record it
         if (adminOutcome != 0) {
             placeToss(tossId, (adminOutcome - 1));
         }
 
-        // Emit event for toss creation
+        //Emit event for toss creation
         emit TossCreated(admin, tossId, condition, outcomes, tossingAmounts, block.timestamp);
         return tossId;
     }
@@ -226,12 +170,12 @@ contract CoinToss {
         bytes32 s,
         uint256 permitDeadline
     ) public returns (uint256) {
-        // Validate toss parameters before creating
+        //Validate toss parameters before creating
         _validateTossParameters(admin, condition, outcomes, tossingAmounts, endTime, adminOutcome);
         
-        tossId++;  // Increment the toss ID counter
+        tossId++;  //Increment the toss ID counter
         
-        // Store the new toss information in the contract's state
+        //Store the new toss information in the contract's state
         tosses[tossId] = Toss({
             admin: admin,
             condition: condition,
@@ -241,16 +185,16 @@ contract CoinToss {
             status: TossStatus.CREATED
         });
         
-        // Store the outcomes and amounts for this toss
+        //Store the outcomes and amounts for this toss
         outcomesToss[tossId] = outcomes;
         tossingAmountsToss[tossId] = tossingAmounts;
 
-        // If the admin has placed a toss, record it
+        //If the admin has placed a toss, record it
         if (adminOutcome != 0) {
             placeTossWithPermit(tossId, (adminOutcome - 1), v, r, s, permitDeadline);
         }
 
-        // Emit event for toss creation
+        //Emit event for toss creation
         emit TossCreated(admin, tossId, condition, outcomes, tossingAmounts, block.timestamp);
         return tossId;
     }
@@ -267,9 +211,9 @@ contract CoinToss {
         string[] memory outcomes
     ) public {
         Toss storage toss = tosses[id];
-        if (msg.sender != toss.admin) revert OnlyAdmin();  // Only admin can update toss metadata
-        toss.condition = condition;  // Update condition
-        outcomesToss[id] = outcomes;  // Update outcomes
+        if (msg.sender != toss.admin) revert OnlyAdmin();  //Only admin can update toss metadata
+        toss.condition = condition;  //Update condition
+        outcomesToss[id] = outcomes;  //Update outcomes
     }
 
     /**
@@ -283,22 +227,22 @@ contract CoinToss {
     ) public {
         Toss storage toss = tosses[id];
 
-        // Various validation checks before placing the toss
+        //Various validation checks before placing the toss
         if (toss.status != TossStatus.CREATED) revert TossAlreadyResolved();
         if (outcomeIndex >= outcomesToss[id].length) revert InvalidOutcomeIndex();
         if (playerHasTossed[msg.sender][id]) revert PlayerAlreadyTossed();
         if (outcomeForPlayers[id][outcomeIndex].length >= MAX_PLAYERS_FOR_OUTCOME_LENGTH) revert MaxPlayersReached();
-        // Adjusted logic to check endTime only if it's set
+        //Adjusted logic to check endTime only if it's set
         if (toss.endTime != 0) {
             if (toss.endTime < block.timestamp) revert TossAlreadyEnded();
         }
-        // Get amount from the toss
+        //Get amount from the toss
         uint256 amount = tossingAmountsToss[id][outcomeIndex]; 
-        // Transfer the betting amount from the player to the contract
+        //Transfer the betting amount from the player to the contract
         IERC20 token = IERC20(tossingTokenAddress);
         token.safeTransferFrom(msg.sender, address(this), amount);
         
-        // Update toss state with the player's toss
+        //Update toss state with the player's toss
         toss.totalTossingAmount += amount;
         playersToss[msg.sender][id] = outcomeIndex;
         outcomeForPlayers[id][outcomeIndex].push(msg.sender);
@@ -326,26 +270,26 @@ contract CoinToss {
     ) public {
         Toss storage toss = tosses[id];
 
-        // Various validation checks before placing the toss
+        //Various validation checks before placing the toss
         if (toss.status != TossStatus.CREATED) revert TossAlreadyResolved();
         if (outcomeIndex >= outcomesToss[id].length) revert InvalidOutcomeIndex();
         if (playerHasTossed[msg.sender][id]) revert PlayerAlreadyTossed();
         if (outcomeForPlayers[id][outcomeIndex].length >= MAX_PLAYERS_FOR_OUTCOME_LENGTH) revert MaxPlayersReached();
-        // Adjusted logic to check endTime only if it's set
+        //Adjusted logic to check endTime only if it's set
         if (toss.endTime != 0) {
             if (toss.endTime < block.timestamp) revert TossAlreadyEnded(); 
         }
-        // Get amount from the toss
+        //Get amount from the toss
         uint256 amount = tossingAmountsToss[id][outcomeIndex]; 
 
-        // Permit approval
+        //Permit approval
         IERC20Permit(tossingTokenAddress).permit(msg.sender, address(this), amount, permitDeadline, v, r, s);
 
-        // Transfer the betting amount from the player to the contract
+        //Transfer the betting amount from the player to the contract
         IERC20 token = IERC20(tossingTokenAddress);
         token.safeTransferFrom(msg.sender, address(this), amount);
         
-        // Update toss state with the player's toss
+        //Update toss state with the player's toss
         toss.totalTossingAmount += amount;
         playersToss[msg.sender][id] = outcomeIndex;
         outcomeForPlayers[id][outcomeIndex].push(msg.sender);
@@ -408,11 +352,11 @@ contract CoinToss {
         uint256 outcomeIndex = playersToss[msg.sender][id];
         uint256 amount = tossingAmountsToss[id][outcomeIndex];
 
-        // Transfer the betting amount back to the player
+        //Transfer the betting amount back to the player
         IERC20 token = IERC20(tossingTokenAddress);
         token.safeTransfer(msg.sender, amount);
 
-        // Mark the player as having claimed their tokens
+        //Mark the player as having claimed their tokens
         playerHasTossed[msg.sender][id] = false;
     }
 
@@ -431,7 +375,7 @@ contract CoinToss {
         if(toss.status != TossStatus.CREATED) revert TossAlreadyResolved();
         if(msg.sender != toss.admin) revert InvalidAdminAddress();
         if(outcomeIndex >= outcomesToss[id].length) revert InvalidOutcomeIndex(); 
-        // Adjusted logic to check endTime only if it's set
+        //Adjusted logic to check endTime only if it's set
         if (toss.endTime != 0) {
             if (toss.endTime > block.timestamp) revert TossNotEnded(); 
         }
@@ -528,7 +472,7 @@ contract CoinToss {
         if (adminOutcome > outcomes.length) revert InvalidAdminOutcome();
         if (endTime <= block.timestamp && endTime != 0) revert EndTimeInPast(); //o zero o valido 
         
-        // Ensure each betting amount is within the allowed limit
+        //Ensure each betting amount is within the allowed limit
         for (uint256 i = 0; i < tossingAmounts.length; i++) {
             if (tossingAmounts[i] > maxTossingAmountPerOutcome) revert TossingAmountExceedsMax();
         }
