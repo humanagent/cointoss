@@ -32,7 +32,7 @@ describe("CoinToss", function () {
 
     return { coinToss, owner, otherAccount, usdc, usdcAddress, maxTossingAmountPerOutcome, baseHolder1, baseHolder2, baseHolder3, baseHolder4, baseHolder5, baseHolder6, baseHolder7, baseHolder8, baseHolder9, baseHolder10 };
   }
-/*
+
   describe("Deployment", function () {
     it("Should set the correct tossing token and max tossing amount", async function () {
       const { coinToss, usdcAddress, maxTossingAmountPerOutcome } = await loadFixture(deployCoinToss);
@@ -273,6 +273,45 @@ describe("CoinToss", function () {
       }
     });
 
+    it("10 players all bet on the winning option", async function () {
+      const { coinToss, owner, usdc, maxTossingAmountPerOutcome, baseHolder1, baseHolder2, baseHolder3, baseHolder4, baseHolder5, baseHolder6, baseHolder7, baseHolder8, baseHolder9, baseHolder10 } = await loadFixture(deployCoinToss);
+      
+      // Create a toss
+      const condition = "Will it be sunny tomorrow?";
+      const outcomes = ["Yes", "No"];
+      const tossingAmounts = [maxTossingAmountPerOutcome, maxTossingAmountPerOutcome];
+      const endTime = Math.floor(Date.now() / 1000) + 86400;
+      const adminOutcome = 0;
+
+      await coinToss.createToss(owner.address, condition, outcomes, tossingAmounts, endTime, adminOutcome);
+
+      const signers = await Promise.all([baseHolder1, baseHolder2, baseHolder3, baseHolder4, baseHolder5, baseHolder6, baseHolder7, baseHolder8, baseHolder9, baseHolder10].map(holder => ethers.getImpersonatedSigner(holder)));
+
+      const balancesBefore = await Promise.all(signers.map(signer => usdc.balanceOf(signer.address)));
+
+      // Place tosses - all players bet on outcome 0
+      for (let i = 0; i < signers.length; i++) {
+        await usdc.connect(signers[i]).approve(coinToss.target, ethers.parseUnits("10", 6));
+        await coinToss.connect(signers[i]).placeToss(1, 0);
+      }
+
+      // Skip time to after the end time
+      await time.increase(86401*2); // 48 hours
+      // Resolve toss with outcome 0 as the winner
+      await coinToss.connect(owner).resolveToss(1, 0, true);
+
+      // Check balances after resolution
+      for (let i = 0; i < signers.length; i++) {
+        const balanceAfter = await usdc.balanceOf(signers[i].address);
+        // Since all players bet on the winning outcome, their balances should remain unchanged
+        expect(balanceAfter).to.equal(balancesBefore[i]);
+      }
+
+      // Verify that the toss status is set to PAID
+      const [tossInfo, , ] = await coinToss.tossInfo(1);
+      expect(tossInfo.status).to.equal(1); // TossStatus.PAID
+    });
+
     it("2 players make a 0$ toss and resolve", async function () {
       const { coinToss, owner, usdc, baseHolder1, baseHolder2 } = await loadFixture(deployCoinToss);
       
@@ -338,7 +377,7 @@ describe("CoinToss", function () {
 
     
   });
-*/
+
   describe("Admin and User Pause/Return Actions", function () {
     it("Admin pauses toss and transfer back funds to players", async function () {
       const { coinToss, owner, usdc, maxTossingAmountPerOutcome, baseHolder1, baseHolder2 } = await loadFixture(deployCoinToss);
