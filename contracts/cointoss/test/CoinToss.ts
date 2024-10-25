@@ -147,7 +147,7 @@ describe("CoinToss", function () {
         .withArgs(owner.address, 1, condition, outcomes, tossingAmounts, anyValue);
     });
   });
-*/
+
   describe("Place Toss", function () {
     it("Should allow a player to place a toss", async function () {
       const { coinToss, owner, usdc, maxTossingAmountPerOutcome, baseHolder1 } = await loadFixture(deployCoinToss);
@@ -334,6 +334,100 @@ describe("CoinToss", function () {
       // Try to resolve toss before end time
       await expect(coinToss.connect(owner).resolveToss(1, 0, true))
         .to.be.revertedWithCustomError(coinToss, "TossNotEnded");
+    });
+
+    
+  });
+*/
+  describe("Admin and User Pause/Return Actions", function () {
+    it("Admin pauses toss and transfer back funds to players", async function () {
+      const { coinToss, owner, usdc, maxTossingAmountPerOutcome, baseHolder1, baseHolder2 } = await loadFixture(deployCoinToss);
+      
+      // Create a toss
+      const condition = "Will it rain tomorrow?";
+      const outcomes = ["Yes", "No"];
+      const tossingAmounts = [maxTossingAmountPerOutcome, maxTossingAmountPerOutcome];
+      const endTime = Math.floor(Date.now() / 1000) + 86400; // 24 hours from now
+      const adminOutcome = 0;
+
+      await coinToss.createToss(owner.address, condition, outcomes, tossingAmounts, endTime, adminOutcome);
+
+      const signer1 = await ethers.getImpersonatedSigner(baseHolder1);
+      const signer2 = await ethers.getImpersonatedSigner(baseHolder2);
+
+      // Record initial balances
+      const initialBalance1 = await usdc.balanceOf(signer1.address);
+      const initialBalance2 = await usdc.balanceOf(signer2.address);
+
+      // Place tosses
+      await usdc.connect(signer1).approve(coinToss.target, ethers.parseUnits("10", 6));
+      await coinToss.connect(signer1).placeToss(1, 0);
+
+      await usdc.connect(signer2).approve(coinToss.target, ethers.parseUnits("10", 6));
+      await coinToss.connect(signer2).placeToss(1, 1);
+
+      // Admin returns toss
+      await coinToss.connect(owner).adminReturnToss(1);
+
+      // Check toss status
+      const [toss, , ] = await coinToss.tossInfo(1);
+      expect(toss.status).to.equal(1); // TossStatus.PAID
+
+      // Check balances are restored
+      const finalBalance1 = await usdc.balanceOf(signer1.address);
+      const finalBalance2 = await usdc.balanceOf(signer2.address);
+
+      expect(finalBalance1).to.equal(initialBalance1);
+      expect(finalBalance2).to.equal(initialBalance2);
+    });
+
+    it("Admin pauses toss and users claim funds", async function () {
+      const { coinToss, owner, usdc, maxTossingAmountPerOutcome, baseHolder1, baseHolder2 } = await loadFixture(deployCoinToss);
+      
+      // Create a toss
+      const condition = "Will it snow tomorrow?";
+      const outcomes = ["Yes", "No"];
+      const tossingAmounts = [maxTossingAmountPerOutcome, maxTossingAmountPerOutcome];
+      const endTime = Math.floor(Date.now() / 1000) + 86400; // 24 hours from now
+      const adminOutcome = 0;
+
+      await coinToss.createToss(owner.address, condition, outcomes, tossingAmounts, endTime, adminOutcome);
+
+      const signer1 = await ethers.getImpersonatedSigner(baseHolder1);
+      const signer2 = await ethers.getImpersonatedSigner(baseHolder2);
+
+      // Record initial balances
+      const initialBalance1 = await usdc.balanceOf(signer1.address);
+      const initialBalance2 = await usdc.balanceOf(signer2.address);
+
+      // Place tosses
+      await usdc.connect(signer1).approve(coinToss.target, ethers.parseUnits("10", 6));
+      await coinToss.connect(signer1).placeToss(1, 0);
+
+      await usdc.connect(signer2).approve(coinToss.target, ethers.parseUnits("10", 6));
+      await coinToss.connect(signer2).placeToss(1, 1);
+
+      // Admin pauses toss
+      await coinToss.connect(owner).adminPauseToss(1);
+
+      // Check toss status
+      let [toss, , ] = await coinToss.tossInfo(1);
+      expect(toss.status).to.equal(2); // TossStatus.PAUSED
+
+      // Users claim their tokens
+      await coinToss.connect(signer1).claimTokensFromPausedToss(1);
+      await coinToss.connect(signer2).claimTokensFromPausedToss(1);
+
+      // Check balances are restored
+      const finalBalance1 = await usdc.balanceOf(signer1.address);
+      const finalBalance2 = await usdc.balanceOf(signer2.address);
+
+      expect(finalBalance1).to.equal(initialBalance1);
+      expect(finalBalance2).to.equal(initialBalance2);
+
+      // Verify that players can't claim twice
+      await expect(coinToss.connect(signer1).claimTokensFromPausedToss(1)).to.be.revertedWithCustomError(coinToss, "PlayerDidNotToss");
+      await expect(coinToss.connect(signer2).claimTokensFromPausedToss(1)).to.be.revertedWithCustomError(coinToss, "PlayerDidNotToss");
     });
   });
 });
