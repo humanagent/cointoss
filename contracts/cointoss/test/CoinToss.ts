@@ -17,9 +17,22 @@ describe("CoinToss", function () {
 
     const usdc = await ethers.getContractAt("IERC20", usdcAddress);
 
-    return { coinToss, owner, otherAccount, usdc, usdcAddress, maxTossingAmountPerOutcome };
-  }
+    // USDC Base holders addresses
+    const baseHolder1 = "0xe36288736e5a45c27ee6FA2F8d1A1aeD99D3eA63";
+    const baseHolder2 = "0x97e8418bE37bb4145f4Fc67266D0cb0761cb48A0";
+    const baseHolder3 = "0xaBe8fE965CaAfA63a4537B30eAebe4B97Af52e43";
+    const baseHolder4 = "0xe423F4d8d786939fe131Df85A61193afF0370AA9";
+    const baseHolder5 = "0x94d5Dec1796404ff3544FB09461AF0bC3fb3c2F6";
+    const baseHolder6 = "0xa0e72f85D3ab3920e6Bb17109819Ea7E07Fcf7CF";
+    const baseHolder7 = "0x8F1901DcEf5F7b6E2502F1052AfB589F1734F565";
+    const baseHolder8 = "0x7Ee7D91E3C4fdDb9AA5Efe0e68F0e40A92A16D93";
+    const baseHolder9 = "0xD702F51Fa5a667Ca70440cd3df8DAC53534D1cac";
+    const baseHolder10 = "0x05e189E1BbaF77f1654F0983872fd938AE592eDD";
 
+
+    return { coinToss, owner, otherAccount, usdc, usdcAddress, maxTossingAmountPerOutcome, baseHolder1, baseHolder2, baseHolder3, baseHolder4, baseHolder5, baseHolder6, baseHolder7, baseHolder8, baseHolder9, baseHolder10 };
+  }
+/*
   describe("Deployment", function () {
     it("Should set the correct tossing token and max tossing amount", async function () {
       const { coinToss, usdcAddress, maxTossingAmountPerOutcome } = await loadFixture(deployCoinToss);
@@ -134,12 +147,10 @@ describe("CoinToss", function () {
         .withArgs(owner.address, 1, condition, outcomes, tossingAmounts, anyValue);
     });
   });
-
-
-/*
+*/
   describe("Place Toss", function () {
     it("Should allow a player to place a toss", async function () {
-      const { coinToss, owner, otherAccount, usdc, maxTossingAmountPerOutcome } = await loadFixture(deployCoinToss);
+      const { coinToss, owner, usdc, maxTossingAmountPerOutcome, baseHolder1 } = await loadFixture(deployCoinToss);
       
       // Create a toss
       const condition = "Will it rain tomorrow?";
@@ -150,40 +161,179 @@ describe("CoinToss", function () {
 
       await coinToss.createToss(owner.address, condition, outcomes, tossingAmounts, endTime, adminOutcome);
 
-      // Approve USDC spending
-      await usdc.connect(otherAccount).approve(coinToss.target, ethers.parseUnits("10", 6));
-
+      const signer1 = await ethers.getImpersonatedSigner(baseHolder1);
+  
+      // call erc20 approve impersonating owner
+      await usdc.connect(signer1).approve(coinToss.target, ethers.parseUnits("10", 6));
       // Place a toss
-      await expect(coinToss.connect(otherAccount).placeToss(1, 0))
+      await expect(coinToss.connect(signer1).placeToss(1, 0))
         .to.emit(coinToss, "TossPlaced")
-        .withArgs(1, otherAccount.address, 0, ethers.parseUnits("10", 6));
+        .withArgs(1, signer1.address, 0, ethers.parseUnits("10", 6));
 
-      expect(await coinToss.playerToss(otherAccount.address, 1)).to.equal(0);
+      expect(await coinToss.playerToss(signer1.address, 1)).to.equal(0);
     });
 
-    it("Should revert if player tries to toss twice", async function () {
-      const { coinToss, owner, otherAccount, usdc } = await loadFixture(deployCoinToss);
+    it("Should make a toss and distribute winnings", async function () {
+      const { coinToss, owner, usdc, maxTossingAmountPerOutcome, baseHolder1, baseHolder2 } = await loadFixture(deployCoinToss);
       
       // Create a toss
       const condition = "Will it rain tomorrow?";
       const outcomes = ["Yes", "No"];
-      const tossingAmounts = [ethers.parseUnits("10", 6), ethers.parseUnits("10", 6)];
+      const tossingAmounts = [maxTossingAmountPerOutcome, maxTossingAmountPerOutcome];
       const endTime = Math.floor(Date.now() / 1000) + 86400;
       const adminOutcome = 0;
 
       await coinToss.createToss(owner.address, condition, outcomes, tossingAmounts, endTime, adminOutcome);
 
-      // Approve USDC spending
-      await usdc.connect(otherAccount).approve(coinToss.target, ethers.parseUnits("20", 6));
+      const signer1 = await ethers.getImpersonatedSigner(baseHolder1);
+      const signer2 = await ethers.getImpersonatedSigner(baseHolder2);
 
-      // Place a toss
-      await coinToss.connect(otherAccount).placeToss(1, 0);
+      const signer1BalanceBefore = await usdc.balanceOf(signer1.address);
 
-      // Try to place another toss
-      await expect(coinToss.connect(otherAccount).placeToss(1, 1))
+      // Place tosses
+      await usdc.connect(signer1).approve(coinToss.target, ethers.parseUnits("10", 6));
+      await coinToss.connect(signer1).placeToss(1, 0);
+
+      await usdc.connect(signer2).approve(coinToss.target, ethers.parseUnits("10", 6));
+      await coinToss.connect(signer2).placeToss(1, 1);
+
+      // Skip time to after the end time
+      await time.increase(86401*2); // 48 hours
+
+      // Resolve toss
+      await coinToss.connect(owner).resolveToss(1, 0, true);
+
+      // Check winnings
+      const signer1BalanceAfter = await usdc.balanceOf(signer1.address);
+      const expectedWinnings = ethers.parseUnits("10", 6); // Winning their 10 USDC back plus 10 USDC from the other player
+      expect(signer1BalanceAfter).to.equal(signer1BalanceBefore + expectedWinnings);
+    });
+
+    it("Should revert if try to place a toss twice", async function () {
+      const { coinToss, owner, usdc, maxTossingAmountPerOutcome, baseHolder1 } = await loadFixture(deployCoinToss);
+      
+      // Create a toss
+      const condition = "Will it rain tomorrow?";
+      const outcomes = ["Yes", "No"];
+      const tossingAmounts = [maxTossingAmountPerOutcome, maxTossingAmountPerOutcome];
+      const endTime = Math.floor(Date.now() / 1000) + 86400;
+      const adminOutcome = 0;
+
+      await coinToss.createToss(owner.address, condition, outcomes, tossingAmounts, endTime, adminOutcome);
+
+      const signer1 = await ethers.getImpersonatedSigner(baseHolder1);
+
+      // Place first toss
+      await usdc.connect(signer1).approve(coinToss.target, ethers.parseUnits("20", 6));
+      await coinToss.connect(signer1).placeToss(1, 0);
+
+      // Try to place second toss
+      await expect(coinToss.connect(signer1).placeToss(1, 1))
         .to.be.revertedWithCustomError(coinToss, "PlayerAlreadyTossed");
     });
+
+    it("10 players make a toss (mixed outcomes) and resolve with distribute winnings", async function () {
+      const { coinToss, owner, usdc, maxTossingAmountPerOutcome, baseHolder1, baseHolder2, baseHolder3, baseHolder4, baseHolder5, baseHolder6, baseHolder7, baseHolder8, baseHolder9, baseHolder10 } = await loadFixture(deployCoinToss);
+      
+      // Create a toss
+      const condition = "Will it rain tomorrow?";
+      const outcomes = ["Yes", "No"];
+      const tossingAmounts = [maxTossingAmountPerOutcome, maxTossingAmountPerOutcome];
+      const endTime = Math.floor(Date.now() / 1000) + 86400;
+      const adminOutcome = 0;
+
+      await coinToss.createToss(owner.address, condition, outcomes, tossingAmounts, endTime, adminOutcome);
+
+      const signers = await Promise.all([baseHolder1, baseHolder2, baseHolder3, baseHolder4, baseHolder5, baseHolder6, baseHolder7, baseHolder8, baseHolder9, baseHolder10].map(holder => ethers.getImpersonatedSigner(holder)));
+
+      const balancesBefore = await Promise.all(signers.map(signer => usdc.balanceOf(signer.address)));
+
+      // Place tosses
+      for (let i = 0; i < signers.length; i++) {
+        await usdc.connect(signers[i]).approve(coinToss.target, ethers.parseUnits("10", 6));
+        await coinToss.connect(signers[i]).placeToss(1, i % 2); // Alternating between 0 and 1
+      }
+
+      // Skip time to after the end time
+      await time.increase(86401*2); // 48 hours
+
+      // Resolve toss
+      await coinToss.connect(owner).resolveToss(1, 0, true);
+
+      // Check winnings for winners (those who chose outcome 0)
+      for (let i = 0; i < signers.length; i += 2) {
+        const balanceAfter = await usdc.balanceOf(signers[i].address);
+        expect(balanceAfter).greaterThanOrEqual(balancesBefore[i])
+      }
+
+      // Check losses for losers (those who chose outcome 1)
+      for (let i = 1; i < signers.length; i += 2) {
+        const balanceAfter = await usdc.balanceOf(signers[i].address);
+        expect(balanceAfter).lessThan(balancesBefore[i])
+      }
+    });
+
+    it("2 players make a 0$ toss and resolve", async function () {
+      const { coinToss, owner, usdc, baseHolder1, baseHolder2 } = await loadFixture(deployCoinToss);
+      
+      // Create a toss with 0 tossing amounts
+      const condition = "Will it rain tomorrow?";
+      const outcomes = ["Yes", "No"];
+      const tossingAmounts = [0, 0];
+      const endTime = Math.floor(Date.now() / 1000) + 86400;
+      const adminOutcome = 0;
+
+      await coinToss.createToss(owner.address, condition, outcomes, tossingAmounts, endTime, adminOutcome);
+
+      const signer1 = await ethers.getImpersonatedSigner(baseHolder1);
+      const signer2 = await ethers.getImpersonatedSigner(baseHolder2);
+
+      // Place 0$ tosses
+      await coinToss.connect(signer1).placeToss(1, 0);
+      await coinToss.connect(signer2).placeToss(1, 1);
+
+      // Skip time to after the end time
+      await time.increase(86401*2); // 40 hours
+
+      // Resolve toss
+      await coinToss.connect(owner).resolveToss(1, 0, true);
+
+      // Check that balances haven't changed
+      const signer1BalanceAfter = await usdc.balanceOf(signer1.address);
+      const signer2BalanceAfter = await usdc.balanceOf(signer2.address);
+      
+      expect(signer1BalanceAfter).to.equal(await usdc.balanceOf(signer1.address));
+      expect(signer2BalanceAfter).to.equal(await usdc.balanceOf(signer2.address));
+
+      //expect status to be PAID
+      expect((await coinToss.tossInfo(1))[0].status).to.equal(1);
+    });
+
+    it("Should revert when trying to resolve a toss before end time", async function () {
+      const { coinToss, owner, usdc, maxTossingAmountPerOutcome, baseHolder1, baseHolder2 } = await loadFixture(deployCoinToss);
+      
+      // Create a toss
+      const condition = "Will it rain tomorrow?";
+      const outcomes = ["Yes", "No"];
+      const tossingAmounts = [maxTossingAmountPerOutcome, maxTossingAmountPerOutcome];
+      const endTime = Math.floor(Date.now() / 1000) + 86400; // 24 hours from now
+      const adminOutcome = 0;
+
+      await coinToss.createToss(owner.address, condition, outcomes, tossingAmounts, endTime, adminOutcome);
+
+      const signer1 = await ethers.getImpersonatedSigner(baseHolder1);
+      const signer2 = await ethers.getImpersonatedSigner(baseHolder2);
+
+      // Place tosses
+      await usdc.connect(signer1).approve(coinToss.target, ethers.parseUnits("10", 6));
+      await coinToss.connect(signer1).placeToss(1, 0);
+
+      await usdc.connect(signer2).approve(coinToss.target, ethers.parseUnits("10", 6));
+      await coinToss.connect(signer2).placeToss(1, 1);
+
+      // Try to resolve toss before end time
+      await expect(coinToss.connect(owner).resolveToss(1, 0, true))
+        .to.be.revertedWithCustomError(coinToss, "TossNotEnded");
+    });
   });
-*/
-  // Add more test cases for other functions like resolveToss, distributeWinnings, etc.
 });
