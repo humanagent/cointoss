@@ -59,7 +59,7 @@ export const POST = frames(async (ctx) => {
     };
 
     const domain = {
-      name: "USDC",
+      name: "USD Coin",
       version: "2",
       chainId: base.id,
       verifyingContract: process.env.USDC_CONTRACT_ADDRESS! as `0x${string}`,
