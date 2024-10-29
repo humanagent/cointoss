@@ -20,11 +20,11 @@ const handleRequest = frames(async (ctx) => {
   if (txHash && tossId) {
     // save tx hash
     const redis = await getRedisClient();
-    const betDataString = await redis.get(tossId);
-    const betData = betDataString ? JSON.parse(betDataString) : null;
+    const tossDataString = await redis.get(tossId);
+    const tossData = tossDataString ? JSON.parse(tossDataString) : null;
     await redis.set(tossId, {
       //@ts-ignore
-      ...betData,
+      ...tossData,
       cancelTransactionId: txHash,
     });
   }

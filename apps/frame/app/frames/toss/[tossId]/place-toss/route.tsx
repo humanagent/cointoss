@@ -1,9 +1,10 @@
 import { frames } from "../../../frames";
-import { createPublicClient, formatUnits, http } from "viem";
+import { createPublicClient, erc20Abi, formatUnits, http } from "viem";
 import { base } from "viem/chains";
-import { BETBOT_ABI, ERC20_ABI } from "@/app/abi";
-import { BetStatus, parseAddress, vercelURL } from "@/app/utils";
+import { COINTOSS_ABI } from "@/app/abi";
+import { TossStatus, parseAddress, vercelURL } from "@/app/utils";
 import { Button } from "frames.js/next";
+import { getRedisClient } from "@/lib/redis";
 
 const handleRequest = frames(async (ctx) => {
   const user = await ctx.walletAddress();
@@ -16,16 +17,16 @@ const handleRequest = frames(async (ctx) => {
     transport: http(),
   });
 
-  const [bet, outcomes, amounts] = await publicClient.readContract({
+  const [toss, outcomes, amounts] = await publicClient.readContract({
     address: process.env.COINTOSS_CONTRACT_ADDRESS as `0x${string}`,
-    abi: BETBOT_ABI,
-    functionName: "betInfo",
+    abi: COINTOSS_ABI,
+    functionName: "tossInfo",
     args: [BigInt(tossId)],
   });
 
   const allowance = await publicClient.readContract({
     address: process.env.USDC_CONTRACT_ADDRESS as `0x${string}`,
-    abi: ERC20_ABI,
+    abi: erc20Abi,
     functionName: "allowance",
     args: [
       user as `0x${string}`,
@@ -33,34 +34,34 @@ const handleRequest = frames(async (ctx) => {
     ],
   });
 
-  const playerBet = await publicClient.readContract({
+  const playerToss = await publicClient.readContract({
     address: process.env.COINTOSS_CONTRACT_ADDRESS as `0x${string}`,
-    abi: BETBOT_ABI,
-    functionName: "playerBet",
+    abi: COINTOSS_ABI,
+    functionName: "playerToss",
     args: [user as `0x${string}`, BigInt(tossId)],
   });
 
-  const playerHasBet = await publicClient.readContract({
+  const playerHasTossed = await publicClient.readContract({
     address: process.env.COINTOSS_CONTRACT_ADDRESS as `0x${string}`,
-    abi: BETBOT_ABI,
-    functionName: "playerHasBet",
+    abi: COINTOSS_ABI,
+    functionName: "playerHasTossed",
     args: [user as `0x${string}`, BigInt(tossId)],
   });
 
   const amount = amounts[0];
 
-  const totalBetAmount = formatUnits(bet.totalBettingAmount, 6);
+  const totalTossAmount = formatUnits(toss.totalTossingAmount, 6);
 
   const [outcomeOnePlayers, outcomeTwoPlayers] = await Promise.all([
     publicClient.readContract({
       address: process.env.COINTOSS_CONTRACT_ADDRESS as `0x${string}`,
-      abi: BETBOT_ABI,
+      abi: COINTOSS_ABI,
       functionName: "outcomeForPlayer",
       args: [BigInt(tossId), BigInt(0)],
     }),
     publicClient.readContract({
       address: process.env.COINTOSS_CONTRACT_ADDRESS as `0x${string}`,
-      abi: BETBOT_ABI,
+      abi: COINTOSS_ABI,
       functionName: "outcomeForPlayer",
       args: [BigInt(tossId), BigInt(1)],
     }),
@@ -68,36 +69,48 @@ const handleRequest = frames(async (ctx) => {
 
   const totalPlayers = outcomeOnePlayers.length + outcomeTwoPlayers.length;
 
+  const permitId = `permit-${tossId}-${user}`;
+  let hasHash = false;
+  if (ctx.message?.transactionId) {
+    const permitHash = ctx.message.transactionId;
+    console.log(permitHash, "permitHash", permitId);
+
+    const redisClient = await getRedisClient();
+    await redisClient.set(permitId, permitHash);
+
+    hasHash = true;
+  }
+
   const buttons = [];
-  if (bet.status === BetStatus.CREATED && !playerHasBet) {
-    if (!allowance || BigInt(allowance) < BigInt(amounts[0])) {
+  if (toss.status === TossStatus.CREATED && !playerHasTossed) {
+    if (!hasHash && (!allowance || BigInt(allowance) < BigInt(amounts[0]))) {
       buttons.push(
         <Button
           action="tx"
-          target={`/approve-tx?amount=${formatUnits(BigInt(amount), 6)}`}
-          post_url={`/toss/${tossId}/place-bet`}>
-          {`Approve ${formatUnits(BigInt(amount), 6)} USDC`}
+          target={`/place-toss-tx?amount=${formatUnits(BigInt(amount), 6)}`}
+          post_url={`/toss/${tossId}/place-toss`}>
+          {`Permit ${formatUnits(BigInt(amount), 6)} USDC`}
         </Button>,
       );
-      buttons.push(
-        <Button action="post" target={`/toss/${tossId}/place-bet`}>
-          🔄 Refresh approval
-        </Button>,
-      );
-    } else {
+      // buttons.push(
+      //   <Button action="post" target={`/toss/${tossId}/place-toss`}>
+      //     🔄 Refresh permit
+      //   </Button>,
+      // );
+    } else if (hasHash) {
       buttons.push(
         <Button
           action="tx"
-          target={`/place-bet-tx?tossId=${tossId}&outcome=0`}
-          post_url={`/place-bet-tx/success?tossId=${tossId}&outcome=0`}>
+          target={`/place-toss-tx?tossId=${tossId}&outcome=0&permitId=${permitId}`}
+          post_url={`/place-toss-tx/success?tossId=${tossId}&outcome=0&permitId=${permitId}`}>
           {`🔵 ${outcomes[0]}`}
         </Button>,
       );
       buttons.push(
         <Button
           action="tx"
-          target={`/place-bet-tx?tossId=${tossId}&outcome=1`}
-          post_url={`/place-bet-tx/success?tossId=${tossId}&outcome=1`}>
+          target={`/place-toss-tx?tossId=${tossId}&outcome=1`}
+          post_url={`/place-toss-tx/success?tossId=${tossId}&outcome=1`}>
           {`🔴 ${outcomes[1]}`}
         </Button>,
       );
@@ -109,13 +122,13 @@ const handleRequest = frames(async (ctx) => {
     </Button>,
   );
 
-  if (bet.status === BetStatus.PAID || bet.status === BetStatus.RESOLVED) {
+  if (toss.status === TossStatus.PAID || toss.status === TossStatus.RESOLVED) {
     return {
       image: (
         <div tw="flex flex-col w-[100%] h-[100%]">
           <img
             src={`${vercelURL()}/images/frame_base_option_${Number(
-              BigInt(bet.outcomeIndex),
+              BigInt(toss.outcomeIndex),
             )}.png`}
             width={"100%"}
             height={"100%"}
@@ -125,7 +138,7 @@ const handleRequest = frames(async (ctx) => {
                 <div tw="absolute top-[54px] left-[600px] flex">
                   <div tw="absolute top-[40px] flex">
                     <div tw="absolute left-[4px] text-[28px]">
-                      {parseAddress(bet.admin)}
+                      {parseAddress(toss.admin)}
                     </div>
                   </div>
                   <div tw="absolute top-[32px] left-[174px] flex">
@@ -146,11 +159,11 @@ const handleRequest = frames(async (ctx) => {
                       fontFamily: "Overpass-Italic",
                       fontStyle: "italic",
                     }}>
-                    {bet.condition}
+                    {toss.condition}
                   </div>
                 </div>
                 <div tw="absolute top-[560px] flex flex-row w-full justify-between px-[128px]">
-                  {bet.outcomeIndex === BigInt(0) ? (
+                  {toss.outcomeIndex === BigInt(0) ? (
                     <div tw="mx-auto w-[500px] flex items-center justify-center text-center text-[56px]">
                       {outcomes[0]}
                     </div>
@@ -159,7 +172,7 @@ const handleRequest = frames(async (ctx) => {
                       {outcomes[0]}
                     </div>
                   )}
-                  {bet.outcomeIndex === BigInt(1) ? (
+                  {toss.outcomeIndex === BigInt(1) ? (
                     <div tw="mx-auto w-[500px] flex items-center justify-center text-center text-[56px]">
                       {outcomes[1]}
                     </div>
@@ -187,13 +200,13 @@ const handleRequest = frames(async (ctx) => {
       ],
     };
   }
-  if (playerHasBet) {
+  if (playerHasTossed) {
     return {
       image: (
         <div tw="flex flex-col w-[100%] h-[100%]">
           <img
             src={`${vercelURL()}/images/frame_base_bet_${Number(
-              playerBet,
+              playerToss,
             )}.png`}
             width={"100%"}
             height={"100%"}
@@ -202,19 +215,19 @@ const handleRequest = frames(async (ctx) => {
               <h1
                 tw="text-[#014601] text-[120px] uppercase text-center"
                 style={{ fontFamily: "Vanguard-Bold", lineHeight: "80px" }}>
-                {bet.condition}
+                {toss.condition}
               </h1>
             </div>
             <div tw="absolute top-[560px] flex flex-row w-full justify-between px-[128px]">
               <div tw="flex justify-center w-[357px]">
-                {playerBet === BigInt(0) ? (
+                {playerToss === BigInt(0) ? (
                   <h1 tw={"text-white font-bold text-[48px]"}>{outcomes[0]}</h1>
                 ) : (
                   <h1 tw={"text-black font-bold text-[48px]"}>{outcomes[0]}</h1>
                 )}
               </div>
               <div tw="flex justify-center w-[357px]">
-                {playerBet === BigInt(1) ? (
+                {playerToss === BigInt(1) ? (
                   <h1 tw={"text-white font-bold text-[48px]"}>{outcomes[1]}</h1>
                 ) : (
                   <h1 tw={"text-black font-bold text-[48px]"}>{outcomes[1]}</h1>
@@ -233,7 +246,7 @@ const handleRequest = frames(async (ctx) => {
                 <h1
                   tw="text-[#014601] font-bold text-[48px]"
                   style={{ fontFamily: "Vanguard-Bold", fontWeight: 700 }}>
-                  ${totalBetAmount}
+                  ${totalTossAmount}
                 </h1>
               </div>
               <div tw="absolute relative flex justify-center w-[200px]">
@@ -249,7 +262,7 @@ const handleRequest = frames(async (ctx) => {
                 <h1
                   tw="text-[26px] font-bold"
                   style={{ fontFamily: "Overpass-Bold", fontWeight: 700 }}>
-                  {parseAddress(bet.admin)}
+                  {parseAddress(toss.admin)}
                 </h1>
               </div>
             </div>
@@ -278,7 +291,7 @@ const handleRequest = frames(async (ctx) => {
             <h1
               tw="text-[#014601] text-[120px] uppercase text-center"
               style={{ fontFamily: "Vanguard-Bold", lineHeight: "80px" }}>
-              {bet.condition}
+              {toss.condition}
             </h1>
           </div>
           <div tw="absolute top-[560px] flex flex-row w-full justify-between px-[128px]">
@@ -301,7 +314,7 @@ const handleRequest = frames(async (ctx) => {
               <h1
                 tw="text-[#014601] font-bold text-[48px]"
                 style={{ fontFamily: "Vanguard-Bold", fontWeight: 700 }}>
-                ${totalBetAmount}
+                ${totalTossAmount}
               </h1>
             </div>
             <div tw="absolute relative flex justify-center w-[200px]">
@@ -317,7 +330,7 @@ const handleRequest = frames(async (ctx) => {
               <h1
                 tw="text-[26px] font-bold"
                 style={{ fontFamily: "Overpass-Bold", fontWeight: 700 }}>
-                {parseAddress(bet.admin)}
+                {parseAddress(toss.admin)}
               </h1>
             </div>
           </div>

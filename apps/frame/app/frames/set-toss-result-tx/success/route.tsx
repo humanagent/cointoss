@@ -1,7 +1,7 @@
 import { frames } from "../../frames";
 import { createPublicClient, formatUnits, http } from "viem";
 import { base } from "viem/chains";
-import { BETBOT_ABI } from "@/app/abi";
+import { COINTOSS_ABI } from "@/app/abi";
 import { parseAddress, vercelURL } from "@/app/utils";
 import { getRedisClient } from "@/lib/redis";
 
@@ -17,26 +17,26 @@ const handleRequest = frames(async (ctx) => {
     transport: http(),
   });
 
-  const [bet, outcomes, amounts] = await publicClient.readContract({
+  const [toss, outcomes, amounts] = await publicClient.readContract({
     address: process.env.COINTOSS_CONTRACT_ADDRESS as `0x${string}`,
-    abi: BETBOT_ABI,
-    functionName: "betInfo",
+    abi: COINTOSS_ABI,
+    functionName: "tossInfo",
     args: [BigInt(tossId!)],
   });
 
   const amount = amounts[0];
-  const totalBetAmount = formatUnits(bet.totalBettingAmount, 6);
+  const totalTossAmount = formatUnits(toss.totalTossingAmount, 6);
 
   const [outcomeOnePlayers, outcomeTwoPlayers] = await Promise.all([
     publicClient.readContract({
       address: process.env.COINTOSS_CONTRACT_ADDRESS as `0x${string}`,
-      abi: BETBOT_ABI,
+      abi: COINTOSS_ABI,
       functionName: "outcomeForPlayer",
       args: [BigInt(tossId!), BigInt(0)],
     }),
     publicClient.readContract({
       address: process.env.COINTOSS_CONTRACT_ADDRESS as `0x${string}`,
-      abi: BETBOT_ABI,
+      abi: COINTOSS_ABI,
       functionName: "outcomeForPlayer",
       args: [BigInt(tossId!), BigInt(1)],
     }),
@@ -49,11 +49,11 @@ const handleRequest = frames(async (ctx) => {
   if (txHash && tossId) {
     // save tx hash
     const redis = await getRedisClient();
-    const betDataString = await redis.get(tossId);
-    const betData = betDataString ? JSON.parse(betDataString) : null;
+    const tossDataString = await redis.get(tossId);
+    const tossData = tossDataString ? JSON.parse(tossDataString) : null;
     await redis.set(tossId, {
       //@ts-ignore
-      ...betData,
+      ...tossData,
       resultTransactionId: txHash,
     });
   }
@@ -70,7 +70,7 @@ const handleRequest = frames(async (ctx) => {
             <h1
               tw="text-[#014601] text-[120px] uppercase text-center"
               style={{ fontFamily: "Vanguard-Bold", lineHeight: "80px" }}>
-              {bet.condition}
+              {toss.condition}
             </h1>
           </div>
           <div tw="absolute top-[560px] flex flex-row w-full justify-between px-[128px]">
@@ -94,7 +94,7 @@ const handleRequest = frames(async (ctx) => {
               <h1
                 tw="text-[#014601] font-bold text-[48px]"
                 style={{ fontFamily: "Vanguard-Bold", fontWeight: 700 }}>
-                ${totalBetAmount}
+                ${totalTossAmount}
               </h1>
             </div>
             <div tw="absolute relative flex justify-center w-[200px]">
@@ -110,7 +110,7 @@ const handleRequest = frames(async (ctx) => {
               <h1
                 tw="text-[26px] font-bold"
                 style={{ fontFamily: "Overpass-Bold", fontWeight: 700 }}>
-                {parseAddress(bet.admin)}
+                {parseAddress(toss.admin)}
               </h1>
             </div>
           </div>

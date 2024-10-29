@@ -1,8 +1,8 @@
 import { frames } from "../../../frames";
 import { createPublicClient, formatUnits, http } from "viem";
 import { base } from "viem/chains";
-import { BETBOT_ABI } from "@/app/abi";
-import { BetStatus, vercelURL } from "@/app/utils";
+import { COINTOSS_ABI } from "@/app/abi";
+import { TossStatus, vercelURL } from "@/app/utils";
 import { Button } from "frames.js/next";
 
 const handleRequest = frames(async (ctx) => {
@@ -15,32 +15,32 @@ const handleRequest = frames(async (ctx) => {
     transport: http(),
   });
 
-  const [bet, outcomes, amounts] = await publicClient.readContract({
+  const [toss, outcomes, amounts] = await publicClient.readContract({
     address: process.env.COINTOSS_CONTRACT_ADDRESS as `0x${string}`,
-    abi: BETBOT_ABI,
-    functionName: "betInfo",
+    abi: COINTOSS_ABI,
+    functionName: "tossInfo",
     args: [BigInt(tossId)],
   });
 
   const [outcomeOnePlayers, outcomeTwoPlayers] = await Promise.all([
     publicClient.readContract({
       address: process.env.COINTOSS_CONTRACT_ADDRESS as `0x${string}`,
-      abi: BETBOT_ABI,
+      abi: COINTOSS_ABI,
       functionName: "outcomeForPlayer",
       args: [BigInt(tossId), BigInt(0)],
     }),
     publicClient.readContract({
       address: process.env.COINTOSS_CONTRACT_ADDRESS as `0x${string}`,
-      abi: BETBOT_ABI,
+      abi: COINTOSS_ABI,
       functionName: "outcomeForPlayer",
       args: [BigInt(tossId), BigInt(1)],
     }),
   ]);
 
   const totalPlayers = outcomeOnePlayers.length + outcomeTwoPlayers.length;
-  const totalBetAmount = formatUnits(bet.totalBettingAmount, 6);
+  const totalTossAmount = formatUnits(toss.totalTossingAmount, 6);
 
-  if (bet.status === BetStatus.PAID || bet.status === BetStatus.RESOLVED) {
+  if (toss.status === TossStatus.PAID || toss.status === TossStatus.RESOLVED) {
     return {
       image: (
         <div tw="flex flex-col w-[100%] h-[100%]">
@@ -58,7 +58,7 @@ const handleRequest = frames(async (ctx) => {
                         fontFamily: "Overpass-Italic",
                         fontStyle: "italic",
                       }}>
-                      {totalBetAmount}$
+                      {totalTossAmount}$
                     </h1>
                   </div>
                 </div>
@@ -110,7 +110,7 @@ const handleRequest = frames(async (ctx) => {
                     style={{
                       fontFamily: "Overpass-Bold",
                     }}>
-                    {totalBetAmount}$
+                    {totalTossAmount}$
                   </h1>
                 </div>
               </div>

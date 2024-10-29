@@ -1,7 +1,6 @@
 import { HandlerContext } from "@xmtp/message-kit";
 import { textGeneration } from "../lib/openai.js";
 import { USER_REPLACEMENTS, TAG_NAME } from "../lib/constants.js";
-import { hexToBytes } from "viem";
 
 export async function handleText(context: HandlerContext) {
   if (!process?.env?.OPEN_AI_API_KEY) {

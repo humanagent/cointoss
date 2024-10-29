@@ -1,7 +1,7 @@
 import { frames } from "../../../frames";
 import { createPublicClient, http } from "viem";
 import { base } from "viem/chains";
-import { BETBOT_ABI } from "@/app/abi";
+import { COINTOSS_ABI } from "@/app/abi";
 import { vercelURL } from "@/app/utils";
 import { Button } from "frames.js/next";
 import { getRedisClient } from "@/lib/redis";
@@ -15,10 +15,10 @@ const handleRequest = frames(async (ctx) => {
     transport: http(),
   });
 
-  const [bet, outcomes, amounts] = await publicClient.readContract({
+  const [toss, outcomes, amounts] = await publicClient.readContract({
     address: process.env.COINTOSS_CONTRACT_ADDRESS as `0x${string}`,
-    abi: BETBOT_ABI,
-    functionName: "betInfo",
+    abi: COINTOSS_ABI,
+    functionName: "tossInfo",
     args: [BigInt(tossId)],
   });
 
@@ -27,7 +27,7 @@ const handleRequest = frames(async (ctx) => {
 
   const redis = await getRedisClient();
 
-  if (bet.admin.toLowerCase() !== user?.toLowerCase()) {
+  if (toss.admin.toLowerCase() !== user?.toLowerCase()) {
     // a user who is not admin can't set the result
     return {
       image: (
@@ -104,8 +104,8 @@ const handleRequest = frames(async (ctx) => {
     buttons: [
       <Button
         action="tx"
-        target={`/cancel-bet-tx?tossId=${tossId}`}
-        post_url={`/cancel-bet-tx/success?tossId=${tossId}`}>
+        target={`/cancel-toss-tx?tossId=${tossId}`}
+        post_url={`/cancel-toss-tx/success?tossId=${tossId}`}>
         ✅ Confirm
       </Button>,
       <Button action="post" target={`/toss/${tossId}/manage`}>

@@ -11,7 +11,7 @@ export function parseAddress(
   return `${address.slice(0, start)}...${address.slice(end)}`;
 }
 
-export enum BetStatus {
+export enum TossStatus {
   CREATED = 0,
   PAID = 1,
   PAUSED = 2,

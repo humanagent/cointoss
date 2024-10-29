@@ -3,27 +3,71 @@ export const COINTOSSBOT_ABI = [
     inputs: [
       {
         internalType: "address",
-        name: "target",
+        name: "_tossingTokenAddress",
         type: "address",
       },
+      {
+        internalType: "uint256",
+        name: "_maxTossingAmountPerOutcome",
+        type: "uint256",
+      },
     ],
-    name: "AddressEmptyCode",
-    type: "error",
+    stateMutability: "nonpayable",
+    type: "constructor",
   },
   {
-    inputs: [
-      {
-        internalType: "address",
-        name: "account",
-        type: "address",
-      },
-    ],
-    name: "AddressInsufficientBalance",
+    inputs: [],
+    name: "AtLeastTwoOutcomesRequired",
     type: "error",
   },
   {
     inputs: [],
-    name: "FailedInnerCall",
+    name: "EndTimeInPast",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "InvalidAdminAddress",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "InvalidAdminOutcome",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "InvalidCondition",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "InvalidOutcomeIndex",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "MaxPlayersReached",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "OnlyAdmin",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "OutcomesAndAmountsMismatch",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "PlayerAlreadyTossed",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "PlayerDidNotToss",
     type: "error",
   },
   {
@@ -38,6 +82,36 @@ export const COINTOSSBOT_ABI = [
     type: "error",
   },
   {
+    inputs: [],
+    name: "TossAlreadyEnded",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "TossAlreadyResolved",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "TossNotEnded",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "TossNotPaused",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "TossNotResolved",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "TossingAmountExceedsMax",
+    type: "error",
+  },
+  {
     anonymous: false,
     inputs: [
       {
@@ -49,7 +123,7 @@ export const COINTOSSBOT_ABI = [
       {
         indexed: true,
         internalType: "uint256",
-        name: "betId",
+        name: "tossId",
         type: "uint256",
       },
       {
@@ -67,7 +141,7 @@ export const COINTOSSBOT_ABI = [
       {
         indexed: false,
         internalType: "uint256[]",
-        name: "bettingAmounts",
+        name: "tossingAmounts",
         type: "uint256[]",
       },
       {
@@ -77,7 +151,7 @@ export const COINTOSSBOT_ABI = [
         type: "uint256",
       },
     ],
-    name: "BetCreated",
+    name: "TossCreated",
     type: "event",
   },
   {
@@ -86,11 +160,11 @@ export const COINTOSSBOT_ABI = [
       {
         indexed: true,
         internalType: "uint256",
-        name: "betId",
+        name: "tossId",
         type: "uint256",
       },
     ],
-    name: "BetPaid",
+    name: "TossPaid",
     type: "event",
   },
   {
@@ -99,11 +173,11 @@ export const COINTOSSBOT_ABI = [
       {
         indexed: true,
         internalType: "uint256",
-        name: "betId",
+        name: "tossId",
         type: "uint256",
       },
     ],
-    name: "BetPaused",
+    name: "TossPaused",
     type: "event",
   },
   {
@@ -112,13 +186,13 @@ export const COINTOSSBOT_ABI = [
       {
         indexed: true,
         internalType: "uint256",
-        name: "betId",
+        name: "tossId",
         type: "uint256",
       },
       {
         indexed: true,
         internalType: "address",
-        name: "bettor",
+        name: "player",
         type: "address",
       },
       {
@@ -130,11 +204,11 @@ export const COINTOSSBOT_ABI = [
       {
         indexed: false,
         internalType: "uint256",
-        name: "bettingAmount",
+        name: "tossingAmount",
         type: "uint256",
       },
     ],
-    name: "BetPlaced",
+    name: "TossPlaced",
     type: "event",
   },
   {
@@ -143,17 +217,17 @@ export const COINTOSSBOT_ABI = [
       {
         indexed: true,
         internalType: "uint256",
-        name: "betId",
+        name: "tossId",
         type: "uint256",
       },
       {
         indexed: true,
         internalType: "address",
-        name: "bettor",
+        name: "player",
         type: "address",
       },
     ],
-    name: "BetWithdrawn",
+    name: "TossWithdrawn",
     type: "event",
   },
   {
@@ -164,7 +238,56 @@ export const COINTOSSBOT_ABI = [
         type: "uint256",
       },
     ],
-    name: "adminWithdrawPausedBet",
+    name: "adminPauseToss",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "id",
+        type: "uint256",
+      },
+    ],
+    name: "adminReturnToss",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "id",
+        type: "uint256",
+      },
+      {
+        internalType: "string",
+        name: "condition",
+        type: "string",
+      },
+      {
+        internalType: "string[]",
+        name: "outcomes",
+        type: "string[]",
+      },
+    ],
+    name: "changeTossMetadata",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "id",
+        type: "uint256",
+      },
+    ],
+    name: "claimTokensFromPausedToss",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -188,8 +311,13 @@ export const COINTOSSBOT_ABI = [
       },
       {
         internalType: "uint256[]",
-        name: "bettingAmounts",
+        name: "tossingAmounts",
         type: "uint256[]",
+      },
+      {
+        internalType: "uint256",
+        name: "endTime",
+        type: "uint256",
       },
       {
         internalType: "uint256",
@@ -197,7 +325,71 @@ export const COINTOSSBOT_ABI = [
         type: "uint256",
       },
     ],
-    name: "createBet",
+    name: "createToss",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "admin",
+        type: "address",
+      },
+      {
+        internalType: "string",
+        name: "condition",
+        type: "string",
+      },
+      {
+        internalType: "string[]",
+        name: "outcomes",
+        type: "string[]",
+      },
+      {
+        internalType: "uint256[]",
+        name: "tossingAmounts",
+        type: "uint256[]",
+      },
+      {
+        internalType: "uint256",
+        name: "endTime",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "adminOutcome",
+        type: "uint256",
+      },
+      {
+        internalType: "uint8",
+        name: "v",
+        type: "uint8",
+      },
+      {
+        internalType: "bytes32",
+        name: "r",
+        type: "bytes32",
+      },
+      {
+        internalType: "bytes32",
+        name: "s",
+        type: "bytes32",
+      },
+      {
+        internalType: "uint256",
+        name: "permitDeadline",
+        type: "uint256",
+      },
+    ],
+    name: "createTossWithPermit",
     outputs: [
       {
         internalType: "uint256",
@@ -222,197 +414,13 @@ export const COINTOSSBOT_ABI = [
     type: "function",
   },
   {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "id",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "outcomeIndex",
-        type: "uint256",
-      },
-    ],
-    name: "placeBet",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "id",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "outcomeIndex",
-        type: "uint256",
-      },
-      {
-        internalType: "bool",
-        name: "distribute",
-        type: "bool",
-      },
-    ],
-    name: "resolveBet",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_bettingTokenAddress",
-        type: "address",
-      },
-    ],
-    stateMutability: "nonpayable",
-    type: "constructor",
-  },
-  {
     inputs: [],
-    name: "betId",
+    name: "maxTossingAmountPerOutcome",
     outputs: [
       {
         internalType: "uint256",
         name: "",
         type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "id",
-        type: "uint256",
-      },
-    ],
-    name: "betInfo",
-    outputs: [
-      {
-        components: [
-          {
-            internalType: "address",
-            name: "admin",
-            type: "address",
-          },
-          {
-            internalType: "string",
-            name: "condition",
-            type: "string",
-          },
-          {
-            internalType: "uint256",
-            name: "outcomeIndex",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "totalBettingAmount",
-            type: "uint256",
-          },
-          {
-            internalType: "enum SimpleBettingBot.BetStatus",
-            name: "status",
-            type: "uint8",
-          },
-        ],
-        internalType: "struct SimpleBettingBot.Bet",
-        name: "",
-        type: "tuple",
-      },
-      {
-        internalType: "string[]",
-        name: "",
-        type: "string[]",
-      },
-      {
-        internalType: "uint256[]",
-        name: "",
-        type: "uint256[]",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    name: "bets",
-    outputs: [
-      {
-        internalType: "address",
-        name: "admin",
-        type: "address",
-      },
-      {
-        internalType: "string",
-        name: "condition",
-        type: "string",
-      },
-      {
-        internalType: "uint256",
-        name: "outcomeIndex",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "totalBettingAmount",
-        type: "uint256",
-      },
-      {
-        internalType: "enum SimpleBettingBot.BetStatus",
-        name: "status",
-        type: "uint8",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    name: "bettingAmountsBet",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "bettingTokenAddress",
-    outputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
       },
     ],
     stateMutability: "view",
@@ -484,7 +492,7 @@ export const COINTOSSBOT_ABI = [
         type: "uint256",
       },
     ],
-    name: "outcomesBet",
+    name: "outcomesToss",
     outputs: [
       {
         internalType: "string",
@@ -498,25 +506,57 @@ export const COINTOSSBOT_ABI = [
   {
     inputs: [
       {
-        internalType: "address",
-        name: "bettor",
-        type: "address",
+        internalType: "uint256",
+        name: "id",
+        type: "uint256",
       },
+      {
+        internalType: "uint256",
+        name: "outcomeIndex",
+        type: "uint256",
+      },
+    ],
+    name: "placeToss",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
       {
         internalType: "uint256",
         name: "id",
         type: "uint256",
       },
-    ],
-    name: "playerBet",
-    outputs: [
       {
         internalType: "uint256",
-        name: "",
+        name: "outcomeIndex",
+        type: "uint256",
+      },
+      {
+        internalType: "uint8",
+        name: "v",
+        type: "uint8",
+      },
+      {
+        internalType: "bytes32",
+        name: "r",
+        type: "bytes32",
+      },
+      {
+        internalType: "bytes32",
+        name: "s",
+        type: "bytes32",
+      },
+      {
+        internalType: "uint256",
+        name: "permitDeadline",
         type: "uint256",
       },
     ],
-    stateMutability: "view",
+    name: "placeTossWithPermit",
+    outputs: [],
+    stateMutability: "nonpayable",
     type: "function",
   },
   {
@@ -532,7 +572,7 @@ export const COINTOSSBOT_ABI = [
         type: "uint256",
       },
     ],
-    name: "playerHasBet",
+    name: "playerHasTossed",
     outputs: [
       {
         internalType: "bool",
@@ -547,6 +587,30 @@ export const COINTOSSBOT_ABI = [
     inputs: [
       {
         internalType: "address",
+        name: "player",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "id",
+        type: "uint256",
+      },
+    ],
+    name: "playerToss",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
         name: "",
         type: "address",
       },
@@ -556,12 +620,190 @@ export const COINTOSSBOT_ABI = [
         type: "uint256",
       },
     ],
-    name: "playersBet",
+    name: "playersToss",
     outputs: [
       {
         internalType: "uint256",
         name: "",
         type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "id",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "outcomeIndex",
+        type: "uint256",
+      },
+      {
+        internalType: "bool",
+        name: "distribute",
+        type: "bool",
+      },
+    ],
+    name: "resolveToss",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "tossId",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "id",
+        type: "uint256",
+      },
+    ],
+    name: "tossInfo",
+    outputs: [
+      {
+        components: [
+          {
+            internalType: "address",
+            name: "admin",
+            type: "address",
+          },
+          {
+            internalType: "string",
+            name: "condition",
+            type: "string",
+          },
+          {
+            internalType: "uint256",
+            name: "outcomeIndex",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "totalTossingAmount",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "endTime",
+            type: "uint256",
+          },
+          {
+            internalType: "enum ICointoss.TossStatus",
+            name: "status",
+            type: "uint8",
+          },
+        ],
+        internalType: "struct ICointoss.Toss",
+        name: "",
+        type: "tuple",
+      },
+      {
+        internalType: "string[]",
+        name: "",
+        type: "string[]",
+      },
+      {
+        internalType: "uint256[]",
+        name: "",
+        type: "uint256[]",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    name: "tosses",
+    outputs: [
+      {
+        internalType: "address",
+        name: "admin",
+        type: "address",
+      },
+      {
+        internalType: "string",
+        name: "condition",
+        type: "string",
+      },
+      {
+        internalType: "uint256",
+        name: "outcomeIndex",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "totalTossingAmount",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "endTime",
+        type: "uint256",
+      },
+      {
+        internalType: "enum ICointoss.TossStatus",
+        name: "status",
+        type: "uint8",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    name: "tossingAmountsToss",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "tossingTokenAddress",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
       },
     ],
     stateMutability: "view",

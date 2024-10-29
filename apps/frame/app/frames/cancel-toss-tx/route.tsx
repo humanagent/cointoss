@@ -2,7 +2,7 @@ import { Abi, encodeFunctionData } from "viem";
 import { frames } from "../frames";
 import { transaction } from "frames.js/core";
 import { base } from "viem/chains";
-import { BETBOT_ABI } from "@/app/abi";
+import { COINTOSS_ABI } from "@/app/abi";
 
 export const POST = frames(async (ctx) => {
   const url = new URL(ctx.request.url);
@@ -18,8 +18,8 @@ export const POST = frames(async (ctx) => {
   }
 
   const calldata = encodeFunctionData({
-    abi: BETBOT_ABI,
-    functionName: "adminWithdrawPausedBet",
+    abi: COINTOSS_ABI,
+    functionName: "adminReturnToss",
     args: [BigInt(tossId)] as const,
   });
 
@@ -27,7 +27,7 @@ export const POST = frames(async (ctx) => {
     chainId: `eip155:${base.id}`,
     method: "eth_sendTransaction",
     params: {
-      abi: BETBOT_ABI as Abi,
+      abi: COINTOSS_ABI as Abi,
       to: process.env.COINTOSS_CONTRACT_ADDRESS as `0x${string}`,
       data: calldata,
       value: "0",

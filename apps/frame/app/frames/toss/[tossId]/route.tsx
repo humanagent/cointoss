@@ -1,8 +1,8 @@
 import { frames } from "../../frames";
 import { createPublicClient, formatUnits, http } from "viem";
 import { base } from "viem/chains";
-import { BETBOT_ABI } from "@/app/abi";
-import { BetStatus, parseAddress, vercelURL } from "@/app/utils";
+import { COINTOSS_ABI } from "@/app/abi";
+import { TossStatus, parseAddress, vercelURL } from "@/app/utils";
 import { Button } from "frames.js/next";
 import { getRedisClient } from "@/lib/redis";
 
@@ -15,30 +15,30 @@ const handleRequest = frames(async (ctx) => {
     transport: http(),
   });
 
-  const [bet, outcomes, amounts] = await publicClient.readContract({
+  const [toss, outcomes, amounts] = await publicClient.readContract({
     address: process.env.COINTOSS_CONTRACT_ADDRESS as `0x${string}`,
-    abi: BETBOT_ABI,
-    functionName: "betInfo",
+    abi: COINTOSS_ABI,
+    functionName: "tossInfo",
     args: [BigInt(tossId)],
   });
 
   const amount = amounts[0];
   const redis = await getRedisClient();
-  const betDataString = await redis.get(tossId);
-  const betData = betDataString ? JSON.parse(betDataString) : null;
+  const tossDataString = await redis.get(tossId);
+  const tossData = tossDataString ? JSON.parse(tossDataString) : null;
 
-  const totalBetAmount = formatUnits(bet.totalBettingAmount, 6);
+  const totalTossAmount = formatUnits(toss.totalTossingAmount, 6);
 
   const [outcomeOnePlayers, outcomeTwoPlayers] = await Promise.all([
     publicClient.readContract({
       address: process.env.COINTOSS_CONTRACT_ADDRESS as `0x${string}`,
-      abi: BETBOT_ABI,
+      abi: COINTOSS_ABI,
       functionName: "outcomeForPlayer",
       args: [BigInt(tossId), BigInt(0)],
     }),
     publicClient.readContract({
       address: process.env.COINTOSS_CONTRACT_ADDRESS as `0x${string}`,
-      abi: BETBOT_ABI,
+      abi: COINTOSS_ABI,
       functionName: "outcomeForPlayer",
       args: [BigInt(tossId), BigInt(1)],
     }),
@@ -46,10 +46,10 @@ const handleRequest = frames(async (ctx) => {
 
   const totalPlayers = outcomeOnePlayers.length + outcomeTwoPlayers.length;
 
-  if (bet.status === BetStatus.PAUSED) {
+  if (toss.status === TossStatus.PAUSED) {
     //@ts-ignore
-    const txUrl = betData?.cancelTransactionId
-      ? `https://basescan.org/tx/${betData?.cancelTransactionId}`
+    const txUrl = tossData?.cancelTransactionId
+      ? `https://basescan.org/tx/${tossData?.cancelTransactionId}`
       : null;
     const pausedButtons = [];
     if (txUrl) {
@@ -95,14 +95,14 @@ const handleRequest = frames(async (ctx) => {
       buttons: pausedButtons,
     };
   }
-  if (bet.status === BetStatus.PAID || bet.status === BetStatus.RESOLVED) {
-    const txUrl = `https://basescan.org/tx/${betData.resultTransactionId}`;
+  if (toss.status === TossStatus.PAID || toss.status === TossStatus.RESOLVED) {
+    const txUrl = `https://basescan.org/tx/${tossData.resultTransactionId}`;
     return {
       image: (
         <div tw="flex flex-col w-[100%] h-[100%]">
           <img
             src={`${vercelURL()}/images/frame_base_option_${Number(
-              BigInt(bet.outcomeIndex),
+              BigInt(toss.outcomeIndex),
             )}.png`}
             width={"100%"}
             height={"100%"}
@@ -111,7 +111,7 @@ const handleRequest = frames(async (ctx) => {
               <h1
                 tw="text-[#014601] text-[120px] uppercase text-center"
                 style={{ fontFamily: "Vanguard-Bold", lineHeight: "80px" }}>
-                {bet.condition}
+                {toss.condition}
               </h1>
             </div>
             <div tw="absolute top-[560px] flex flex-row w-full justify-between px-[128px]">
@@ -134,7 +134,7 @@ const handleRequest = frames(async (ctx) => {
                 <h1
                   tw="text-[#014601] font-bold text-[48px]"
                   style={{ fontFamily: "Vanguard-Bold", fontWeight: 700 }}>
-                  ${totalBetAmount}
+                  ${totalTossAmount}
                 </h1>
               </div>
               <div tw="absolute relative flex justify-center w-[200px]">
@@ -150,7 +150,7 @@ const handleRequest = frames(async (ctx) => {
                 <h1
                   tw="text-[26px] font-bold"
                   style={{ fontFamily: "Overpass-Bold", fontWeight: 700 }}>
-                  {parseAddress(bet.admin)}
+                  {parseAddress(toss.admin)}
                 </h1>
               </div>
             </div>
@@ -173,9 +173,9 @@ const handleRequest = frames(async (ctx) => {
 
   const buttons = [];
 
-  if (bet.status === BetStatus.CREATED) {
+  if (toss.status === TossStatus.CREATED) {
     buttons.push(
-      <Button action="post" target={`/toss/${tossId}/place-bet`}>
+      <Button action="post" target={`/toss/${tossId}/place-toss`}>
         🪙 Toss
       </Button>,
       <Button action="post" target={`/toss/${tossId}/manage`}>
@@ -196,7 +196,7 @@ const handleRequest = frames(async (ctx) => {
             <h1
               tw="text-[#014601] text-[120px] uppercase text-center"
               style={{ fontFamily: "Vanguard-Bold", lineHeight: "80px" }}>
-              {bet.condition}
+              {toss.condition}
             </h1>
           </div>
           <div tw="absolute top-[560px] flex flex-row w-full justify-between px-[128px]">
@@ -219,7 +219,7 @@ const handleRequest = frames(async (ctx) => {
               <h1
                 tw="text-[#014601] font-bold text-[48px]"
                 style={{ fontFamily: "Vanguard-Bold", fontWeight: 700 }}>
-                ${totalBetAmount}
+                ${totalTossAmount}
               </h1>
             </div>
             <div tw="absolute relative flex justify-center w-[200px]">
@@ -235,7 +235,7 @@ const handleRequest = frames(async (ctx) => {
               <h1
                 tw="text-[26px] font-bold"
                 style={{ fontFamily: "Overpass-Bold", fontWeight: 700 }}>
-                {parseAddress(bet.admin)}
+                {parseAddress(toss.admin)}
               </h1>
             </div>
           </div>

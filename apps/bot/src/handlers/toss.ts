@@ -4,7 +4,7 @@ import { privateKeyToAccount } from "viem/accounts";
 import {
   GROUP_MESSAGE_FIRST,
   TOSS_LIST_REPLY,
-  NO_PENDING_BETS_ERROR,
+  NO_PENDING_TOSSES_ERROR,
 } from "../lib/constants.js";
 import { base } from "viem/chains";
 import { getRedisClient } from "../lib/redis.js";
@@ -71,12 +71,13 @@ export const createToss = async (
       account: account,
       abi: COINTOSSBOT_ABI,
       address: process.env.COINTOSS_CONTRACT_ADDRESS! as `0x${string}`,
-      functionName: "createBet",
+      functionName: "createToss",
       args: [
         judge as `0x${string}`,
         description as string,
         (options as string).split(","),
         [parsedAmount, parsedAmount],
+        BigInt(0), // TODO: set endTime properly
         BigInt(0),
       ],
     });
@@ -91,7 +92,7 @@ export const createToss = async (
     const tossId = await publicClient.readContract({
       address: process.env.COINTOSS_CONTRACT_ADDRESS! as `0x${string}`,
       abi: COINTOSSBOT_ABI,
-      functionName: "betId",
+      functionName: "tossId",
     });
 
     await db?.read();
@@ -117,32 +118,32 @@ export const handleBetList = async (context: HandlerContext) => {
   await context.send(TOSS_LIST_REPLY);
 
   const publicClient = createPublicClient({ chain: base, transport: http() });
-  const betPlacedEvents = await publicClient.getContractEvents({
+  const tossPlacedEvents = await publicClient.getContractEvents({
     abi: COINTOSSBOT_ABI,
     address: process.env.COINTOSS_CONTRACT_ADDRESS as `0x${string}`,
-    eventName: "BetPlaced",
-    args: { bettor: sender.address as `0x${string}` },
+    eventName: "TossPlaced",
+    args: { player: sender.address as `0x${string}` },
   });
-  const betsFrames = await Promise.all(
-    betPlacedEvents.map(async (event) => {
-      const bet = await publicClient.readContract({
+  const tossFrames = await Promise.all(
+    tossPlacedEvents.map(async (event) => {
+      const toss = await publicClient.readContract({
         abi: COINTOSSBOT_ABI,
         address: process.env.COINTOSS_CONTRACT_ADDRESS as `0x${string}`,
-        functionName: "bets",
-        args: [event.args.betId!],
+        functionName: "tosses",
+        args: [event.args.tossId!],
       });
-      return bet[4] === 0
-        ? `${process.env.FRAME_URL}/frames/toss/${event.args.betId!}`
+      return toss[4] === 0n
+        ? `${process.env.FRAME_URL}/frames/toss/${event.args.tossId!}`
         : null;
     }),
   );
 
-  const pendingBets = betsFrames.filter(Boolean);
-  if (pendingBets.length === 0) {
-    await context.send(NO_PENDING_BETS_ERROR);
+  const pendingTosses = tossFrames.filter(Boolean);
+  if (pendingTosses.length === 0) {
+    await context.send(NO_PENDING_TOSSES_ERROR);
   } else {
     await Promise.all(
-      pendingBets.map(async (frame) => await context.send(frame!)),
+      pendingTosses.map(async (frame) => await context.send(frame!)),
     );
   }
 };
