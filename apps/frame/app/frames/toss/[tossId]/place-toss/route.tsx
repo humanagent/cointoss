@@ -2,7 +2,12 @@ import { frames } from "../../../frames";
 import { createPublicClient, erc20Abi, formatUnits, http } from "viem";
 import { base } from "viem/chains";
 import { COINTOSS_ABI } from "@/app/abi";
-import { TossStatus, parseAddress, vercelURL } from "@/app/utils";
+import {
+  TossStatus,
+  getImageAndENS,
+  parseAddress,
+  vercelURL,
+} from "@/app/utils";
 import { Button } from "frames.js/next";
 import { getRedisClient } from "@/lib/redis";
 
@@ -81,6 +86,8 @@ const handleRequest = frames(async (ctx) => {
     hasHash = true;
   }
 
+  const { avatarUrl, ens } = await getImageAndENS(toss.admin);
+
   const buttons = [];
   if (toss.status === TossStatus.CREATED && !playerHasTossed) {
     if (!hasHash && (!allowance || BigInt(allowance) < BigInt(amounts[0]))) {
@@ -133,55 +140,113 @@ const handleRequest = frames(async (ctx) => {
             width={"100%"}
             height={"100%"}
             tw="relative">
-            <div tw="absolute top-[40px] relative flex">
-              <div tw="absolute top-0 left-[40px] flex">
-                <div tw="absolute top-[54px] left-[600px] flex">
-                  <div tw="absolute top-[40px] flex">
-                    <div tw="absolute left-[4px] text-[28px]">
-                      {parseAddress(toss.admin)}
-                    </div>
-                  </div>
-                  <div tw="absolute top-[32px] left-[174px] flex">
-                    <div tw="absolute left-[48px] text-[40px] flex">
-                      <span tw="mr-2" style={{ fontFamily: "Overpass-Bold" }}>
-                        {formatUnits(amount, 6) || "0"}
-                      </span>{" "}
-                      USDC
-                    </div>
-                  </div>
-                </div>
+            <div tw="absolute relative flex justify-center items-center w-full h-[350px] px-[36px]">
+              <h1
+                tw="text-[#014601] text-[120px] uppercase text-center"
+                style={{ fontFamily: "Vanguard-Bold", lineHeight: "80px" }}>
+                {toss.condition}
+              </h1>
+            </div>
+
+            <div tw="absolute top-[400px] left-[64px] flex flex-col items-center justify-center h-[408px] w-[478px]">
+              {toss.outcomeIndex === BigInt(0) ? (
+                <p
+                  tw="text-white text-[24px] uppercase"
+                  style={{ lineHeight: 0.1 }}>
+                  Option 1
+                </p>
+              ) : (
+                <p
+                  tw="text-[#014601] text-[24px] uppercase"
+                  style={{ lineHeight: 0.1 }}>
+                  Option 1
+                </p>
+              )}
+              {toss.outcomeIndex === BigInt(0) ? (
+                <p tw="text-white font-bold text-[40px] -mt-[16px]">
+                  {outcomes[0]}
+                </p>
+              ) : (
+                <p tw="text-black font-bold text-[40px] -mt-[16px]">
+                  {outcomes[0]}
+                </p>
+              )}
+            </div>
+
+            <div tw="absolute top-[400px] right-[64px] flex flex-col items-center justify-center h-[408px] w-[478px]">
+              {toss.outcomeIndex === BigInt(1) ? (
+                <p
+                  tw="text-white text-[24px] uppercase"
+                  style={{ lineHeight: 0.1 }}>
+                  Option 2
+                </p>
+              ) : (
+                <p
+                  tw="text-[#014601] text-[24px] uppercase"
+                  style={{ lineHeight: 0.1 }}>
+                  Option 2
+                </p>
+              )}
+              {toss.outcomeIndex === BigInt(1) ? (
+                <p tw="text-white font-bold text-[40px] -mt-[16px]">
+                  {outcomes[1]}
+                </p>
+              ) : (
+                <p tw="text-black font-bold text-[40px] -mt-[16px]">
+                  {outcomes[1]}
+                </p>
+              )}
+            </div>
+            <div tw="absolute top-[848px] left-[64px] flex flex-row items-center justify-between h-[150px] w-[1018px]">
+              <div tw="flex flex-col items-center justify-center h-[150px] w-[300px]">
+                <p
+                  tw="text-[#014601] text-[24px] uppercase"
+                  style={{ lineHeight: 0.1 }}>
+                  Amount
+                </p>
+                <p tw="text-[#014601] font-bold text-[40px] -mt-[16px]">
+                  ${formatUnits(amount, 6) || "0"}
+                </p>
               </div>
-              <div tw="absolute top-[225px] flex">
-                <div tw="absolute flex">
-                  <div
-                    tw="absolute top-[71px] px-[40px] flex text-[64px] h-[231px] max-w-[920px]"
+              <div tw="flex flex-col items-center justify-center h-[150px] w-[300px]">
+                <p
+                  tw="text-[#014601] text-[24px] uppercase"
+                  style={{ lineHeight: 0.1 }}>
+                  Total Pool
+                </p>
+                <p tw="text-[#014601] font-bold text-[40px] -mt-[16px]">
+                  ${totalTossAmount}
+                </p>
+              </div>
+              <div tw="flex flex-col items-center justify-center h-[150px] w-[300px]">
+                <p
+                  tw="text-[#014601] text-[24px] font-bold uppercase"
+                  style={{ lineHeight: 0.1 }}>
+                  Entrants
+                </p>
+                <p tw="text-black font-bold text-[40px] -mt-[16px]">
+                  {totalPlayers || "0"}
+                </p>
+              </div>
+            </div>
+            <div tw="absolute bottom-[64px] left-[64px] h-[90px] w-full flex flex-row items-center space-x-8">
+              {avatarUrl ? (
+                <img src={avatarUrl} tw="h-[72px] w-[72px] rounded-full" />
+              ) : (
+                <div tw="h-[72px] w-[72px] rounded-full bg-gray-200 flex" />
+              )}
+              <div tw="flex flex-col items-start ml-2">
+                <p tw="text-[26px]">
+                  Created by{" "}
+                  <span
+                    tw="font-bold ml-2"
                     style={{
-                      fontFamily: "Overpass-Italic",
-                      fontStyle: "italic",
+                      fontFamily: "Overpass-Bold",
+                      fontWeight: 700,
                     }}>
-                    {toss.condition}
-                  </div>
-                </div>
-                <div tw="absolute top-[560px] flex flex-row w-full justify-between px-[128px]">
-                  {toss.outcomeIndex === BigInt(0) ? (
-                    <div tw="mx-auto w-[500px] flex items-center justify-center text-center text-[56px]">
-                      {outcomes[0]}
-                    </div>
-                  ) : (
-                    <div tw="mx-auto w-[500px] flex items-center justify-center text-center text-[56px] opacity-30">
-                      {outcomes[0]}
-                    </div>
-                  )}
-                  {toss.outcomeIndex === BigInt(1) ? (
-                    <div tw="mx-auto w-[500px] flex items-center justify-center text-center text-[56px]">
-                      {outcomes[1]}
-                    </div>
-                  ) : (
-                    <div tw="mx-auto w-[500px] flex items-center justify-center text-center text-[56px] opacity-30">
-                      {outcomes[1]}
-                    </div>
-                  )}
-                </div>
+                    {ens ? ens : parseAddress(toss.admin)}
+                  </span>
+                </p>
               </div>
             </div>
           </img>
@@ -218,52 +283,106 @@ const handleRequest = frames(async (ctx) => {
                 {toss.condition}
               </h1>
             </div>
-            <div tw="absolute top-[560px] flex flex-row w-full justify-between px-[128px]">
-              <div tw="flex justify-center w-[357px]">
-                {playerToss === BigInt(0) ? (
-                  <h1 tw={"text-white font-bold text-[48px]"}>{outcomes[0]}</h1>
-                ) : (
-                  <h1 tw={"text-black font-bold text-[48px]"}>{outcomes[0]}</h1>
-                )}
-              </div>
-              <div tw="flex justify-center w-[357px]">
-                {playerToss === BigInt(1) ? (
-                  <h1 tw={"text-white font-bold text-[48px]"}>{outcomes[1]}</h1>
-                ) : (
-                  <h1 tw={"text-black font-bold text-[48px]"}>{outcomes[1]}</h1>
-                )}
-              </div>
+
+            <div tw="absolute top-[400px] left-[64px] flex flex-col items-center justify-center h-[408px] w-[478px]">
+              {toss.outcomeIndex === BigInt(0) ? (
+                <p
+                  tw="text-white text-[24px] uppercase"
+                  style={{ lineHeight: 0.1 }}>
+                  Option 1
+                </p>
+              ) : (
+                <p
+                  tw="text-[#014601] text-[24px] uppercase"
+                  style={{ lineHeight: 0.1 }}>
+                  Option 1
+                </p>
+              )}
+              {toss.outcomeIndex === BigInt(0) ? (
+                <p tw="text-white font-bold text-[40px] -mt-[16px]">
+                  {outcomes[0]}
+                </p>
+              ) : (
+                <p tw="text-black font-bold text-[40px] -mt-[16px]">
+                  {outcomes[0]}
+                </p>
+              )}
             </div>
-            <div tw="absolute bottom-[130px] px-[116px] flex flex-row w-full justify-between">
-              <div tw="absolute relative flex justify-center w-[200px]">
-                <h1
-                  tw="text-[#014601] font-bold text-[48px]"
-                  style={{ fontFamily: "Vanguard-Bold", fontWeight: 700 }}>
+
+            <div tw="absolute top-[400px] right-[64px] flex flex-col items-center justify-center h-[408px] w-[478px]">
+              {toss.outcomeIndex === BigInt(1) ? (
+                <p
+                  tw="text-white text-[24px] uppercase"
+                  style={{ lineHeight: 0.1 }}>
+                  Option 2
+                </p>
+              ) : (
+                <p
+                  tw="text-[#014601] text-[24px] uppercase"
+                  style={{ lineHeight: 0.1 }}>
+                  Option 2
+                </p>
+              )}
+              {toss.outcomeIndex === BigInt(1) ? (
+                <p tw="text-white font-bold text-[40px] -mt-[16px]">
+                  {outcomes[1]}
+                </p>
+              ) : (
+                <p tw="text-black font-bold text-[40px] -mt-[16px]">
+                  {outcomes[1]}
+                </p>
+              )}
+            </div>
+            <div tw="absolute top-[848px] left-[64px] flex flex-row items-center justify-between h-[150px] w-[1018px]">
+              <div tw="flex flex-col items-center justify-center h-[150px] w-[300px]">
+                <p
+                  tw="text-[#014601] text-[24px] uppercase"
+                  style={{ lineHeight: 0.1 }}>
+                  Amount
+                </p>
+                <p tw="text-[#014601] font-bold text-[40px] -mt-[16px]">
                   ${formatUnits(amount, 6) || "0"}
-                </h1>
+                </p>
               </div>
-              <div tw="absolute relative flex justify-center w-[200px]">
-                <h1
-                  tw="text-[#014601] font-bold text-[48px]"
-                  style={{ fontFamily: "Vanguard-Bold", fontWeight: 700 }}>
+              <div tw="flex flex-col items-center justify-center h-[150px] w-[300px]">
+                <p
+                  tw="text-[#014601] text-[24px] uppercase"
+                  style={{ lineHeight: 0.1 }}>
+                  Total Pool
+                </p>
+                <p tw="text-[#014601] font-bold text-[40px] -mt-[16px]">
                   ${totalTossAmount}
-                </h1>
+                </p>
               </div>
-              <div tw="absolute relative flex justify-center w-[200px]">
-                <h1
-                  tw="text-[#014601] font-bold text-[48px]"
-                  style={{ fontFamily: "Vanguard-Bold", fontWeight: 700 }}>
+              <div tw="flex flex-col items-center justify-center h-[150px] w-[300px]">
+                <p
+                  tw="text-[#014601] text-[24px] font-bold uppercase"
+                  style={{ lineHeight: 0.1 }}>
+                  Entrants
+                </p>
+                <p tw="text-black font-bold text-[40px] -mt-[16px]">
                   {totalPlayers || "0"}
-                </h1>
+                </p>
               </div>
             </div>
-            <div tw="absolute top-[508px] left-[190px] flex">
-              <div tw="absolute top-[474px] relative flex justify-center w-[200px]">
-                <h1
-                  tw="text-[26px] font-bold"
-                  style={{ fontFamily: "Overpass-Bold", fontWeight: 700 }}>
-                  {parseAddress(toss.admin)}
-                </h1>
+            <div tw="absolute bottom-[64px] left-[64px] h-[90px] w-full flex flex-row items-center space-x-8">
+              {avatarUrl ? (
+                <img src={avatarUrl} tw="h-[72px] w-[72px] rounded-full" />
+              ) : (
+                <div tw="h-[72px] w-[72px] rounded-full bg-gray-200 flex" />
+              )}
+              <div tw="flex flex-col items-start ml-2">
+                <p tw="text-[26px]">
+                  Created by{" "}
+                  <span
+                    tw="font-bold ml-2"
+                    style={{
+                      fontFamily: "Overpass-Bold",
+                      fontWeight: 700,
+                    }}>
+                    {ens ? ens : parseAddress(toss.admin)}
+                  </span>
+                </p>
               </div>
             </div>
           </img>
@@ -294,44 +413,78 @@ const handleRequest = frames(async (ctx) => {
               {toss.condition}
             </h1>
           </div>
-          <div tw="absolute top-[560px] flex flex-row w-full justify-between px-[128px]">
-            <div tw="absolute relative flex justify-center w-[357px]">
-              <h1 tw="text-black font-bold text-[48px]">{outcomes[0]}</h1>
-            </div>
-            <div tw="absolute relative flex justify-center w-[357px]">
-              <h1 tw="text-black font-bold text-[48px]">{outcomes[1]}</h1>
-            </div>
+
+          <div tw="absolute top-[400px] left-[64px] flex flex-col items-center justify-center h-[408px] w-[478px]">
+            <p
+              tw="text-[#014601] text-[24px] uppercase"
+              style={{ lineHeight: 0.1 }}>
+              Option 1
+            </p>
+            <p tw="text-black font-bold text-[40px] -mt-[16px]">
+              {outcomes[0]}
+            </p>
           </div>
-          <div tw="absolute bottom-[130px] px-[116px] flex flex-row w-full justify-between">
-            <div tw="absolute relative flex justify-center w-[200px]">
-              <h1
-                tw="text-[#014601] font-bold text-[48px]"
-                style={{ fontFamily: "Vanguard-Bold", fontWeight: 700 }}>
+
+          <div tw="absolute top-[400px] right-[64px] flex flex-col items-center justify-center h-[408px] w-[478px]">
+            <p
+              tw="text-[#014601] text-[24px] uppercase"
+              style={{ lineHeight: 0.1 }}>
+              Option 2
+            </p>
+            <p tw="text-black font-bold text-[40px] -mt-[16px]">
+              {outcomes[1]}
+            </p>
+          </div>
+          <div tw="absolute top-[848px] left-[64px] flex flex-row items-center justify-between h-[150px] w-[1018px]">
+            <div tw="flex flex-col items-center justify-center h-[150px] w-[300px]">
+              <p
+                tw="text-[#014601] text-[24px] uppercase"
+                style={{ lineHeight: 0.1 }}>
+                Amount
+              </p>
+              <p tw="text-[#014601] font-bold text-[40px] -mt-[16px]">
                 ${formatUnits(amount, 6) || "0"}
-              </h1>
+              </p>
             </div>
-            <div tw="absolute relative flex justify-center w-[200px]">
-              <h1
-                tw="text-[#014601] font-bold text-[48px]"
-                style={{ fontFamily: "Vanguard-Bold", fontWeight: 700 }}>
+            <div tw="flex flex-col items-center justify-center h-[150px] w-[300px]">
+              <p
+                tw="text-[#014601] text-[24px] uppercase"
+                style={{ lineHeight: 0.1 }}>
+                Total Pool
+              </p>
+              <p tw="text-[#014601] font-bold text-[40px] -mt-[16px]">
                 ${totalTossAmount}
-              </h1>
+              </p>
             </div>
-            <div tw="absolute relative flex justify-center w-[200px]">
-              <h1
-                tw="text-[#014601] font-bold text-[48px]"
-                style={{ fontFamily: "Vanguard-Bold", fontWeight: 700 }}>
+            <div tw="flex flex-col items-center justify-center h-[150px] w-[300px]">
+              <p
+                tw="text-[#014601] text-[24px] font-bold uppercase"
+                style={{ lineHeight: 0.1 }}>
+                Entrants
+              </p>
+              <p tw="text-black font-bold text-[40px] -mt-[16px]">
                 {totalPlayers || "0"}
-              </h1>
+              </p>
             </div>
           </div>
-          <div tw="absolute top-[508px] left-[190px] flex">
-            <div tw="absolute top-[474px] relative flex justify-center w-[200px]">
-              <h1
-                tw="text-[26px] font-bold"
-                style={{ fontFamily: "Overpass-Bold", fontWeight: 700 }}>
-                {parseAddress(toss.admin)}
-              </h1>
+          <div tw="absolute bottom-[64px] left-[64px] h-[90px] w-full flex flex-row items-center space-x-8">
+            {avatarUrl ? (
+              <img src={avatarUrl} tw="h-[72px] w-[72px] rounded-full" />
+            ) : (
+              <div tw="h-[72px] w-[72px] rounded-full bg-gray-200 flex" />
+            )}
+            <div tw="flex flex-col items-start ml-2">
+              <p tw="text-[26px]">
+                Created by{" "}
+                <span
+                  tw="font-bold ml-2"
+                  style={{
+                    fontFamily: "Overpass-Bold",
+                    fontWeight: 700,
+                  }}>
+                  {ens ? ens : parseAddress(toss.admin)}
+                </span>
+              </p>
             </div>
           </div>
         </img>
