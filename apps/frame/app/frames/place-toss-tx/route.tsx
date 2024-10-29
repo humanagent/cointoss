@@ -2,10 +2,8 @@ import {
   Abi,
   createPublicClient,
   encodeFunctionData,
-  hexToNumber,
   http,
   parseUnits,
-  slice,
 } from "viem";
 import { frames } from "../frames";
 import { transaction } from "frames.js/core";
@@ -95,14 +93,7 @@ export const POST = frames(async (ctx) => {
     throw new Error("Invalid permit");
   }
 
-  const [rViem, sViem, vViem] = [
-    slice(permitHash as `0x${string}`, 0, 32),
-    slice(permitHash as `0x${string}`, 32, 64),
-    slice(permitHash as `0x${string}`, 64, 65),
-  ];
   const { r, s, v } = ethers.utils.splitSignature(permitHash as `0x${string}`);
-  console.log({ r, s, v });
-  console.log({ rViem, sViem, vViem: hexToNumber(vViem) });
   const deadline = 99999999999;
 
   const calldata = encodeFunctionData({
