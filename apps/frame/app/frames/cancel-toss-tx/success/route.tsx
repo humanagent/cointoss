@@ -1,5 +1,5 @@
 import { frames } from "../../frames";
-import { vercelURL } from "@/app/utils";
+import { getFrameUrl } from "@/app/utils";
 import { getRedisClient } from "@/lib/redis";
 import { Button } from "frames.js/next";
 
@@ -34,7 +34,7 @@ const handleRequest = frames(async (ctx) => {
       <div tw="flex flex-col w-[100%] h-[100%]">
         <div tw="flex flex-col w-[100%] h-[100%]">
           <img
-            src={`${vercelURL()}/images/frame_base_message.png`}
+            src={`${getFrameUrl()}/images/frame_base_message.png`}
             width={"100%"}
             height={"100%"}
             tw="relative">

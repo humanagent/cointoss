@@ -2,7 +2,7 @@ import { frames } from "../../../frames";
 import { createPublicClient, formatUnits, http } from "viem";
 import { base } from "viem/chains";
 import { COINTOSS_ABI } from "@/app/abi";
-import { getImageAndENS, parseAddress, vercelURL } from "@/app/utils";
+import { getImageAndENS, parseAddress, getFrameUrl } from "@/app/utils";
 import { Button } from "frames.js/next";
 
 const handleRequest = frames(async (ctx) => {
@@ -52,7 +52,7 @@ const handleRequest = frames(async (ctx) => {
         <div tw="flex flex-col w-[100%] h-[100%]">
           <div tw="flex flex-col w-[100%] h-[100%]">
             <img
-              src={`${vercelURL()}/images/frame_base_message.png`}
+              src={`${getFrameUrl()}/images/frame_base_message.png`}
               width={"100%"}
               height={"100%"}
               tw="relative">
@@ -92,7 +92,7 @@ const handleRequest = frames(async (ctx) => {
     image: (
       <div tw="flex flex-col w-[100%] h-[100%]">
         <img
-          src={`${vercelURL()}/images/frame_base.png`}
+          src={`${getFrameUrl()}/images/frame_base.png`}
           width={"100%"}
           height={"100%"}
           tw="relative">

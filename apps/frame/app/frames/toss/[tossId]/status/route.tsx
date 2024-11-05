@@ -2,7 +2,7 @@ import { frames } from "../../../frames";
 import { createPublicClient, formatUnits, http } from "viem";
 import { base } from "viem/chains";
 import { COINTOSS_ABI } from "@/app/abi";
-import { TossStatus, vercelURL } from "@/app/utils";
+import { TossStatus, getFrameUrl } from "@/app/utils";
 import { Button } from "frames.js/next";
 
 const handleRequest = frames(async (ctx) => {
@@ -45,7 +45,7 @@ const handleRequest = frames(async (ctx) => {
       image: (
         <div tw="flex flex-col w-[100%] h-[100%]">
           <img
-            src={`${vercelURL()}/images/frame_bet_status_closed.png`}
+            src={`${getFrameUrl()}/images/frame_bet_status_closed.png`}
             width={"100%"}
             height={"100%"}
             tw="relative">
@@ -98,7 +98,7 @@ const handleRequest = frames(async (ctx) => {
     image: (
       <div tw="flex flex-col w-[100%] h-[100%]">
         <img
-          src={`${vercelURL()}/images/frame_bet_status.png`}
+          src={`${getFrameUrl()}/images/frame_bet_status.png`}
           width={"100%"}
           height={"100%"}
           tw="relative">

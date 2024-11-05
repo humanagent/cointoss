@@ -2,6 +2,7 @@ import { Abi, encodeFunctionData, parseUnits } from "viem";
 import { frames } from "../frames";
 import { transaction } from "frames.js/core";
 import { base } from "viem/chains";
+// @ts-ignore
 import { ERC20_ABI } from "@/app/abi";
 
 export const POST = frames(async (ctx) => {
