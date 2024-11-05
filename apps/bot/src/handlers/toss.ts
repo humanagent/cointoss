@@ -1,11 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import { HandlerContext } from "@xmtp/message-kit";
 import { privateKeyToAccount } from "viem/accounts";
-import {
-  GROUP_MESSAGE_FIRST,
-  TOSS_LIST_REPLY,
-  NO_PENDING_TOSSES_ERROR,
-} from "../lib/constants.js";
+import { GROUP_MESSAGE_FIRST } from "../lib/constants.js";
 import { base } from "viem/chains";
 import { getRedisClient } from "../lib/redis.js";
 import { db } from "../lib/db.js";
@@ -15,9 +11,8 @@ import { COINTOSSBOT_ABI } from "../abi/index.js";
 export async function handleTossCreation(context: HandlerContext) {
   const {
     message: {
-      content: { content, params },
+      content: { params },
       sender,
-      typeId,
     },
     group,
   } = context;
@@ -106,44 +101,6 @@ export const createToss = async (
     console.error("Error creating toss:", error);
     await context.send(
       "An error occurred while creating the toss. Please try again later.",
-    );
-  }
-};
-
-export const handleBetList = async (context: HandlerContext) => {
-  const {
-    message: { sender },
-  } = context;
-
-  await context.send(TOSS_LIST_REPLY);
-
-  const publicClient = createPublicClient({ chain: base, transport: http() });
-  const tossPlacedEvents = await publicClient.getContractEvents({
-    abi: COINTOSSBOT_ABI,
-    address: process.env.COINTOSS_CONTRACT_ADDRESS as `0x${string}`,
-    eventName: "TossPlaced",
-    args: { player: sender.address as `0x${string}` },
-  });
-  const tossFrames = await Promise.all(
-    tossPlacedEvents.map(async (event) => {
-      const toss = await publicClient.readContract({
-        abi: COINTOSSBOT_ABI,
-        address: process.env.COINTOSS_CONTRACT_ADDRESS as `0x${string}`,
-        functionName: "tosses",
-        args: [event.args.tossId!],
-      });
-      return toss[4] === 0n
-        ? `${process.env.FRAME_URL}/frames/toss/${event.args.tossId!}`
-        : null;
-    }),
-  );
-
-  const pendingTosses = tossFrames.filter(Boolean);
-  if (pendingTosses.length === 0) {
-    await context.send(NO_PENDING_TOSSES_ERROR);
-  } else {
-    await Promise.all(
-      pendingTosses.map(async (frame) => await context.send(frame!)),
     );
   }
 };
