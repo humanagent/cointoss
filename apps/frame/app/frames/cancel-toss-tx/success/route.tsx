@@ -1,5 +1,5 @@
 import { frames } from "../../frames";
-import { vercelURL } from "@/app/utils";
+import { getFrameUrl } from "@/app/utils";
 import { getRedisClient } from "@/lib/redis";
 import { Button } from "frames.js/next";
 
@@ -7,24 +7,24 @@ const handleRequest = frames(async (ctx) => {
   // get path params
   const url = new URL(ctx.request.url);
   const queryParams = new URLSearchParams(url.search);
-  const betId = queryParams.get("betId");
+  const tossId = queryParams.get("tossId");
 
   const buttons = [
-    <Button action="post" target={`/toss/${betId}`}>
+    <Button action="post" target={`/toss/${tossId}`}>
       ⬅️ Go back
     </Button>,
   ];
 
   // save cancel toss tx hash
   const txHash = ctx.message?.transactionId;
-  if (txHash && betId) {
+  if (txHash && tossId) {
     // save tx hash
     const redis = await getRedisClient();
-    const betDataString = await redis.get(betId);
-    const betData = betDataString ? JSON.parse(betDataString) : null;
-    await redis.set(betId, {
+    const tossDataString = await redis.get(tossId);
+    const tossData = tossDataString ? JSON.parse(tossDataString) : null;
+    await redis.set(tossId, {
       //@ts-ignore
-      ...betData,
+      ...tossData,
       cancelTransactionId: txHash,
     });
   }
@@ -34,7 +34,7 @@ const handleRequest = frames(async (ctx) => {
       <div tw="flex flex-col w-[100%] h-[100%]">
         <div tw="flex flex-col w-[100%] h-[100%]">
           <img
-            src={`${vercelURL()}/images/frame_base_message.png`}
+            src={`${getFrameUrl()}/images/frame_base_message.png`}
             width={"100%"}
             height={"100%"}
             tw="relative">

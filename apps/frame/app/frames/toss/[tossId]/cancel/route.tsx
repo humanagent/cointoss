@@ -1,25 +1,25 @@
 import { frames } from "../../../frames";
 import { createPublicClient, http } from "viem";
 import { base } from "viem/chains";
-import { BETBOT_ABI } from "@/app/abi";
-import { vercelURL } from "@/app/utils";
+import { COINTOSS_ABI } from "@/app/abi";
+import { getFrameUrl } from "@/app/utils";
 import { Button } from "frames.js/next";
 import { getRedisClient } from "@/lib/redis";
 
 const handleRequest = frames(async (ctx) => {
   const url = new URL(ctx.request.url);
-  const betId = url.pathname.split("/")[3];
+  const tossId = url.pathname.split("/")[3];
 
   const publicClient = createPublicClient({
     chain: base,
     transport: http(),
   });
 
-  const [bet, outcomes, amounts] = await publicClient.readContract({
+  const [toss, outcomes, amounts] = await publicClient.readContract({
     address: process.env.COINTOSS_CONTRACT_ADDRESS as `0x${string}`,
-    abi: BETBOT_ABI,
-    functionName: "betInfo",
-    args: [BigInt(betId)],
+    abi: COINTOSS_ABI,
+    functionName: "tossInfo",
+    args: [BigInt(tossId)],
   });
 
   const amount = amounts[0];
@@ -27,14 +27,14 @@ const handleRequest = frames(async (ctx) => {
 
   const redis = await getRedisClient();
 
-  if (bet.admin.toLowerCase() !== user?.toLowerCase()) {
+  if (toss.admin.toLowerCase() !== user?.toLowerCase()) {
     // a user who is not admin can't set the result
     return {
       image: (
         <div tw="flex flex-col w-[100%] h-[100%]">
           <div tw="flex flex-col w-[100%] h-[100%]">
             <img
-              src={`${vercelURL()}/images/frame_base_message.png`}
+              src={`${getFrameUrl()}/images/frame_base_message.png`}
               width={"100%"}
               height={"100%"}
               tw="relative">
@@ -63,7 +63,7 @@ const handleRequest = frames(async (ctx) => {
         "Cache-Control": "public, immutable, no-transform, max-age=0",
       },
       buttons: [
-        <Button action="post" target={`/toss/${betId}`}>
+        <Button action="post" target={`/toss/${tossId}`}>
           ⬅️ Go back
         </Button>,
       ],
@@ -74,7 +74,7 @@ const handleRequest = frames(async (ctx) => {
     image: (
       <div tw="flex flex-col w-[100%] h-[100%]">
         <img
-          src={`${vercelURL()}/images/frame_base_message.png`}
+          src={`${getFrameUrl()}/images/frame_base_message.png`}
           width={"100%"}
           height={"100%"}
           tw="relative">
@@ -104,11 +104,11 @@ const handleRequest = frames(async (ctx) => {
     buttons: [
       <Button
         action="tx"
-        target={`/cancel-bet-tx?betId=${betId}`}
-        post_url={`/cancel-bet-tx/success?betId=${betId}`}>
+        target={`/cancel-toss-tx?tossId=${tossId}`}
+        post_url={`/cancel-toss-tx/success?tossId=${tossId}`}>
         ✅ Confirm
       </Button>,
-      <Button action="post" target={`/toss/${betId}/manage`}>
+      <Button action="post" target={`/toss/${tossId}/manage`}>
         ⬅️ Go back
       </Button>,
     ],
