@@ -56,7 +56,7 @@ export const PROMPT_RULES = `You are a helpful and playful agent called {NAME} t
 
 export function PROMPT_SKILLS_AND_EXAMPLES(skills: SkillGroup[], tag: string) {
   let foundSkills = skills.filter(
-    (skill) => skill.tag == `@${tag.toLowerCase()}`
+    (skill) => skill.tag == `@${tag.toLowerCase()}`,
   );
   if (!foundSkills.length || !foundSkills[0] || !foundSkills[0].skills)
     return "";
@@ -71,7 +71,7 @@ export function PROMPT_SKILLS_AND_EXAMPLES(skills: SkillGroup[], tag: string) {
 export async function textGeneration(
   memoryKey: string,
   userPrompt: string,
-  systemPrompt: string
+  systemPrompt: string,
 ) {
   if (!memoryKey) {
     clearMemory();
@@ -113,7 +113,7 @@ export async function textGeneration(
 export async function processMultilineResponse(
   memoryKey: string,
   reply: string,
-  context: any
+  context: any,
 ) {
   if (!memoryKey) {
     clearMemory();

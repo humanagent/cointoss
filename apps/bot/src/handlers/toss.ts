@@ -7,8 +7,10 @@ import { getRedisClient } from "../lib/redis.js";
 import { db } from "../lib/db.js";
 import { createPublicClient, createWalletClient, http, parseUnits } from "viem";
 import { COINTOSSBOT_ABI } from "../abi/index.js";
-import { FRAME_URL } from "../lib/constants.js";
 
+export function getFrameUrl() {
+  return process.env.FRAME_URL || "http://localhost:3000";
+}
 export async function handleTossCreation(context: HandlerContext) {
   const {
     message: {
@@ -97,7 +99,7 @@ export const createToss = async (
       await context.send(GROUP_MESSAGE_FIRST);
       await db.write();
     } else await context.send("Here is your toss!");
-    await context.send(`${FRAME_URL}/frames/toss/${tossId}`);
+    await context.send(`${getFrameUrl()}/frames/toss/${tossId}`);
   } catch (error) {
     console.error("Error creating toss:", error);
     await context.send(

@@ -33,7 +33,3 @@ export const GROUP_MESSAGE_FIRST =
   "Here is your toss! \n\nThe creator of the toss is one who can modify and settle the toss. \n\nThe pool will be split evenly with the winners. \n\nRemember, with great power comes great responsibility!";
 
 export const GROUP_MESSAGE_INITIAL = `Hey everyone! \n\n👋 I’m CoinToss, your friendly bot here to add some fun and excitement to our chats. \n\nStart a toss by tagging me in a yes or no question like "${TAG_NAME} Will it rain tomorrow for $10?" and I’ll take care of the rest.`;
-
-export const FRAME_URL = process.env.FRAME_URL
-  ? `https://${process.env.FRAME_URL}`
-  : "http://localhost:3000";
