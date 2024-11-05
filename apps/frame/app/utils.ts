@@ -1,5 +1,7 @@
-export function vercelURL() {
-  return process.env.FRAME_URL || "http://localhost:3000";
+import { FRAME_URL } from "../../bot/src/lib/constants.js";
+
+export function getFrameUrl() {
+  return FRAME_URL || "http://localhost:3000";
 }
 
 export function parseAddress(

@@ -1,7 +1,4 @@
-import dotenv from "dotenv";
-dotenv.config();
-
-// ...
+import dotenv from "dotenv/config";
 
 export const TAG_NAME = "@cointoss"; /*
   process.env.RAILWAY_SERVICE_ID === "d63a747d-63a3-42bb-9e05-3d1b4300e289"
@@ -37,13 +34,6 @@ export const GROUP_MESSAGE_FIRST =
 
 export const GROUP_MESSAGE_INITIAL = `Hey everyone! \n\n👋 I’m CoinToss, your friendly bot here to add some fun and excitement to our chats. \n\nStart a toss by tagging me in a yes or no question like "${TAG_NAME} Will it rain tomorrow for $10?" and I’ll take care of the rest.`;
 
-export const USER_REPLACEMENTS = {
-  "@saul": "0xf0ea7663233f99d0c12370671abbb6cca980a490",
-  "@shane": "0xa64af7f78de39a238ecd4fff7d6d410dbace2df0",
-  "@fabri": "0x277c0dd35520db4aaddb45d4690ab79353d3368b",
-  "@peter": "0x6a03c07f9cb413ce77f398b00c2053bd794eca1a",
-  "@naomi": "0x33fa52e6a9dbfca57ed277491dbd8ba5a0b248f4",
-  "@ashley": "0x632dd787696585f656d0cba5a052f2276cc98252",
-  "@jha": "0x62eed858af7590fbcae803d208c53ddbb0d1309c",
-  "@darick": "0x841b4b11c51be2e9a33746b9afe0ba83d188da93",
-};
+export const FRAME_URL = process.env.FRAME_URL
+  ? `https://${process.env.FRAME_URL}`
+  : "http://localhost:3000";
