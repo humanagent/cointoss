@@ -49,7 +49,7 @@ export const clearInfoCache = () => {
 export const getUserInfo = async (
   key: string,
   clientAddress?: string,
-  context?: HandlerContext
+  context?: HandlerContext,
 ): Promise<UserInfo | null> => {
   let data: UserInfo = infoCache.get(key) || {
     ensDomain: undefined,
@@ -84,7 +84,7 @@ export const getUserInfo = async (
   if (cacheData) return cacheData;
 
   context?.send(
-    "Hey there! Give me a sec while I fetch info about you first..."
+    "Hey there! Give me a sec while I fetch info about you first...",
   );
   if (keyToUse?.includes(".eth")) {
     const response = await fetch(`https://ensdata.net/${keyToUse}`);
@@ -123,7 +123,7 @@ export const getUserInfo = async (
 export const isOnXMTP = async (
   client: Client,
   domain: string | undefined,
-  address: string | undefined
+  address: string | undefined,
 ) => {
   if (domain == "fabri.eth") return false;
   if (address) return (await client.canMessage([address])).length > 0;
