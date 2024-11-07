@@ -8,6 +8,7 @@
     "clean": "rm -rf .turbo && rm -rf node_modules && yarn clean:lib",
     "clean:lib": "rm -rf dist",
     "dev": "tsc -w & sleep 1 && nodemon --quiet dist/index.js",
+    "dev:bun": "tsc -w & sleep 1 && bun run --watch dist/index.js",
     "format": "yarn format:base -w .",
     "format:base": "prettier --ignore-path ../../.gitignore",
     "format:check": "yarn format:base -c .",
@@ -18,7 +19,7 @@
   },
   "dependencies": {
     "@redis/client": "^1.6.0",
-    "@xmtp/message-kit": "1.1.7-beta.4",
+    "@xmtp/message-kit": "^1.1.7-beta.4",
     "lowdb": "^7.0.1",
     "openai": "^4.58.1",
     "uuid": "^10.0.0",
@@ -29,9 +30,10 @@
     "@types/timestring": "^6.0.5",
     "@types/uuid": "^10.0.0",
     "nodemon": "^3.1.3",
+    "prettier": "^3.3.3",
+    "prettier-plugin-packagejson": "^2.5.2",
     "typescript": "^5.4.5"
   },
-  "packageManager": "yarn@4.2.2",
   "engines": {
     "node": ">=20"
   }

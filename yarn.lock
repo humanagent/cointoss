@@ -3067,9 +3067,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xmtp/message-kit@npm:1.1.7-beta.4":
-  version: 1.1.7-beta.4
-  resolution: "@xmtp/message-kit@npm:1.1.7-beta.4"
+"@xmtp/message-kit@npm:^1.1.7-beta.4":
+  version: 1.1.7-beta.5
+  resolution: "@xmtp/message-kit@npm:1.1.7-beta.5"
   dependencies:
     "@xmtp/content-type-primitives": "npm:^1.0.2"
     "@xmtp/content-type-reaction": "npm:^1.1.10"
@@ -3080,9 +3080,8 @@ __metadata:
     "@xmtp/node-sdk": "npm:^0.0.22"
     "@xmtp/xmtp-js": "npm:^13.0.3"
     dotenv: "npm:^16.4.5"
-    ts-alias: "npm:^0.0.7"
     viem: "npm:^2.16.3"
-  checksum: 10/8e383a3cf6f7da90aa12083e25a82af557324d9edc5eb777a100d91901d6b31154f6e5a1c6a3e926cdd6be5b7eb3d2fcd69656bdf2a1456dc0f9b7938feef028
+  checksum: 10/a7881a40465b35c90e730815960da2193c3bd2c128f23d7cc745d98997d527b75309f5de257d4fe80574d18edc9e6e20ff96e04e66517f87b9d0ea7a45513706
   languageName: node
   linkType: hard
 
@@ -4225,10 +4224,12 @@ __metadata:
     "@types/node": "npm:^20.14.2"
     "@types/timestring": "npm:^6.0.5"
     "@types/uuid": "npm:^10.0.0"
-    "@xmtp/message-kit": "npm:1.1.7-beta.4"
+    "@xmtp/message-kit": "npm:^1.1.7-beta.4"
     lowdb: "npm:^7.0.1"
     nodemon: "npm:^3.1.3"
     openai: "npm:^4.58.1"
+    prettier: "npm:^3.3.3"
+    prettier-plugin-packagejson: "npm:^2.5.2"
     typescript: "npm:^5.4.5"
     uuid: "npm:^10.0.0"
     viem: "npm:^2.18.7"
@@ -7065,7 +7066,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"json5@npm:^2.2.0, json5@npm:^2.2.3":
+"json5@npm:^2.2.3":
   version: 2.2.3
   resolution: "json5@npm:2.2.3"
   bin:
@@ -10346,15 +10347,6 @@ __metadata:
   bin:
     tree-kill: cli.js
   checksum: 10/49117f5f410d19c84b0464d29afb9642c863bc5ba40fcb9a245d474c6d5cc64d1b177a6e6713129eb346b40aebb9d4631d967517f9fbe8251c35b21b13cd96c7
-  languageName: node
-  linkType: hard
-
-"ts-alias@npm:^0.0.7":
-  version: 0.0.7
-  resolution: "ts-alias@npm:0.0.7"
-  dependencies:
-    json5: "npm:^2.2.0"
-  checksum: 10/c84a06ded61f1532ce7b7620d903b7938546dfd06f43ab32e6697a4b3f5e666c2aadc7124d16aef5f5f8efdf65e8032e3df025e95f6b1c3eeea3b0a439918a4f
   languageName: node
   linkType: hard
 

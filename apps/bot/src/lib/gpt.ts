@@ -1,6 +1,7 @@
 import "dotenv/config";
-import type { SkillGroup } from "@xmtp/message-kit";
+import type { SkillGroup, HandlerContext } from "@xmtp/message-kit";
 import OpenAI from "openai";
+
 const openai = new OpenAI({
   apiKey: process.env.OPEN_AI_API_KEY,
 });
@@ -65,6 +66,8 @@ export function PROMPT_SKILLS_AND_EXAMPLES(skills: SkillGroup[], tag: string) {
     .join("\n")}\n\nExamples:\n${foundSkills[0].skills
     .map((skill) => skill.examples)
     .join("\n")}`;
+
+  returnPrompt += "\n";
   return returnPrompt;
 }
 
@@ -113,7 +116,7 @@ export async function textGeneration(
 export async function processMultilineResponse(
   memoryKey: string,
   reply: string,
-  context: any,
+  context: HandlerContext,
 ) {
   if (!memoryKey) {
     clearMemory();
@@ -126,7 +129,8 @@ export async function processMultilineResponse(
   console.log(messages);
   for (const message of messages) {
     if (message.startsWith("/")) {
-      const response = await context.skill(message);
+      const response = await context.executeSkill(message);
+      console.log(response);
       if (response && typeof response.message === "string") {
         let msg = parseMarkdown(response.message);
         chatMemory.addEntry(memoryKey, {
