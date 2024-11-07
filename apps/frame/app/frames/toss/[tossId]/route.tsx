@@ -245,11 +245,11 @@ const handleRequest = frames(async (ctx) => {
 
   if (toss.status === TossStatus.CREATED) {
     buttons.push(
-      <Button action="post" target={`/toss/${tossId}/place-toss`}>
-        🪙 Toss
+      <Button action="post" target={`/toss/${tossId}/place-toss?outcome=0`}>
+        {`🔵 ${outcomes[0]}`}
       </Button>,
-      <Button action="post" target={`/toss/${tossId}/manage`}>
-        ⚙️ Manage
+      <Button action="post" target={`/toss/${tossId}/place-toss?outcome=1`}>
+        {`🔴 ${outcomes[1]}`}
       </Button>,
     );
   }

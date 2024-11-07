@@ -15,6 +15,12 @@ const handleRequest = frames(async (ctx) => {
   const user = await ctx.walletAddress();
   // get path params
   const url = new URL(ctx.request.url);
+  const outcome = url.searchParams.get("outcome");
+
+  if (!outcome) {
+    throw new Error("Outcome is required");
+  }
+
   const tossId = url.pathname.split("/")[3];
 
   const publicClient = createPublicClient({
@@ -95,34 +101,33 @@ const handleRequest = frames(async (ctx) => {
         <Button
           action="tx"
           target={`/place-toss-tx?amount=${formatUnits(BigInt(amount), 6)}`}
-          post_url={`/toss/${tossId}/place-toss`}>
+          post_url={`/toss/${tossId}/place-toss?outcome=${outcome}`}>
           {`Permit ${formatUnits(BigInt(amount), 6)} USDC`}
         </Button>,
       );
-      // buttons.push(
-      //   <Button action="post" target={`/toss/${tossId}/place-toss`}>
-      //     🔄 Refresh permit
-      //   </Button>,
-      // );
     } else if (hasHash) {
       buttons.push(
         <Button
           action="tx"
-          target={`/place-toss-tx?tossId=${tossId}&outcome=0&permitId=${permitId}`}
-          post_url={`/place-toss-tx/success?tossId=${tossId}&outcome=0&permitId=${permitId}`}>
-          {`🔵 ${outcomes[0]}`}
-        </Button>,
-      );
-      buttons.push(
-        <Button
-          action="tx"
-          target={`/place-toss-tx?tossId=${tossId}&outcome=1`}
-          post_url={`/place-toss-tx/success?tossId=${tossId}&outcome=1`}>
-          {`🔴 ${outcomes[1]}`}
+          target={`/place-toss-tx?tossId=${tossId}&outcome=${outcome}&permitId=${permitId}`}
+          post_url={`/place-toss-tx/success?tossId=${tossId}&outcome=${outcome}&permitId=${permitId}`}>
+          {outcome === "0"
+            ? `🔵 Toss ${outcomes[0]}`
+            : `🔴 Toss ${outcomes[0]}`}
         </Button>,
       );
     }
   }
+
+  // check if user is admin and add manage button
+  if (user === toss.admin) {
+    buttons.push(
+      <Button action="post" target={`/toss/${tossId}/manage`}>
+        ⚙️ Manage
+      </Button>,
+    );
+  }
+
   buttons.push(
     <Button action="post" target={`/toss/${tossId}`}>
       ⬅️ Go back
