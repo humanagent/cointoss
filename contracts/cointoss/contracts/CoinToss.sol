@@ -18,9 +18,9 @@ contract CoinToss is ICointoss {
     mapping(address => mapping(uint256 => bool)) public playerHasTossed;  //Tracks if a player has already placed a toss
 
     mapping(uint256 => string[]) public outcomesToss;  //Available outcomes for each toss
-    mapping(uint256 => uint256[]) public tossingAmountsToss;  //Corresponding betting amounts for each outcome
+    mapping(uint256 => uint256[]) public tossingAmountsToss;  //Corresponding tossin amounts for each outcome
 
-    //Address of the ERC20 token used for betting
+    //Address of the ERC20 token used for tossing
     address public tossingTokenAddress;
     
     //Counter for the number of tosses created
@@ -42,8 +42,8 @@ contract CoinToss is ICointoss {
      */
     constructor(address _tossingTokenAddress, uint256 _maxTossingAmountPerOutcome) {
         tossId = 0;  // Initialize tossId to 0
-        tossingTokenAddress = _tossingTokenAddress;  // Store the address of the ERC20 token used for betting
-        maxTossingAmountPerOutcome = _maxTossingAmountPerOutcome;  // Set max betting amount per outcome
+        tossingTokenAddress = _tossingTokenAddress;  // Store the address of the ERC20 token used for tossin
+        maxTossingAmountPerOutcome = _maxTossingAmountPerOutcome;  // Set max tossing amount per outcome
     }
 
     //║══════════════════════════════════════════╗
@@ -102,9 +102,9 @@ contract CoinToss is ICointoss {
      * @param admin Address of the toss creator
      * @param condition Description of the toss condition
      * @param outcomes Array of possible outcomes
-     * @param tossingAmounts Array of corresponding betting amounts for each outcome
+     * @param tossingAmounts Array of corresponding toss amounts for each outcome
      * @param endTime Timestamp when the toss ends
-     * @param adminOutcome Index of the outcome the admin bets on, if any (1-indexed)
+     * @param adminOutcome Index of the outcome the admin toss on, if any (1-indexed)
      * @return The ID of the newly created toss
      */
     function createToss(
@@ -149,9 +149,9 @@ contract CoinToss is ICointoss {
      * @param admin Address of the toss creator
      * @param condition Description of the toss condition
      * @param outcomes Array of possible outcomes
-     * @param tossingAmounts Array of corresponding betting amounts for each outcome
+     * @param tossingAmounts Array of corresponding toss amounts for each outcome
      * @param endTime Timestamp when the toss ends
-     * @param adminOutcome Index of the outcome the admin bets on, if any (1-indexed)
+     * @param adminOutcome Index of the outcome the admin toss on, if any (1-indexed)
      * @return The ID of the newly created toss
      * @param v of the signature
      * @param r of the signature
@@ -238,7 +238,7 @@ contract CoinToss is ICointoss {
         }
         //Get amount from the toss
         uint256 amount = tossingAmountsToss[id][outcomeIndex]; 
-        //Transfer the betting amount from the player to the contract
+        //Transfer the toss amount from the player to the contract
         IERC20 token = IERC20(tossingTokenAddress);
         token.safeTransferFrom(msg.sender, address(this), amount);
         
@@ -285,7 +285,7 @@ contract CoinToss is ICointoss {
         //Permit approval
         IERC20Permit(tossingTokenAddress).permit(msg.sender, address(this), amount, permitDeadline, v, r, s);
 
-        //Transfer the betting amount from the player to the contract
+        //Transfer the toss amount from the player to the contract
         IERC20 token = IERC20(tossingTokenAddress);
         token.safeTransferFrom(msg.sender, address(this), amount);
         
@@ -352,7 +352,7 @@ contract CoinToss is ICointoss {
         uint256 outcomeIndex = playersToss[msg.sender][id];
         uint256 amount = tossingAmountsToss[id][outcomeIndex];
 
-        //Transfer the betting amount back to the player
+        //Transfer the toss amount back to the player
         IERC20 token = IERC20(tossingTokenAddress);
         token.safeTransfer(msg.sender, amount);
 
@@ -453,9 +453,9 @@ contract CoinToss is ICointoss {
      * @param admin The address of the toss creator
      * @param condition The condition of the toss
      * @param outcomes The list of outcomes
-     * @param tossingAmounts The corresponding betting amounts for each outcome
+     * @param tossingAmounts The corresponding toss amounts for each outcome
      * @param endTime The end time of the toss
-     * @param adminOutcome The index of the outcome the admin bets on, if any (1-indexed)
+     * @param adminOutcome The index of the outcome the admin toss on, if any (1-indexed)
      */
     function _validateTossParameters(
         address admin,
@@ -472,7 +472,7 @@ contract CoinToss is ICointoss {
         if (adminOutcome > outcomes.length) revert InvalidAdminOutcome();
         if (endTime <= block.timestamp && endTime != 0) revert EndTimeInPast(); //o zero o valido 
         
-        //Ensure each betting amount is within the allowed limit
+        //Ensure each toss amount is within the allowed limit
         for (uint256 i = 0; i < tossingAmounts.length; i++) {
             if (tossingAmounts[i] > maxTossingAmountPerOutcome) revert TossingAmountExceedsMax();
         }

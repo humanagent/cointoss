@@ -57,7 +57,7 @@ const handleRequest = frames(async (ctx) => {
     image: (
       <div tw="flex flex-col w-[100%] h-[100%]">
         <img
-          src={`${getFrameUrl()}/images/frame_base_bet_${Number(outcome)}.png`}
+          src={`${getFrameUrl()}/images/frame_base_toss_${Number(outcome)}.png`}
           width={"100%"}
           height={"100%"}
           tw="relative">

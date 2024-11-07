@@ -45,7 +45,7 @@ const handleRequest = frames(async (ctx) => {
       image: (
         <div tw="flex flex-col w-[100%] h-[100%]">
           <img
-            src={`${getFrameUrl()}/images/frame_bet_status_closed.png`}
+            src={`${getFrameUrl()}/images/frame_base.png`}
             width={"100%"}
             height={"100%"}
             tw="relative">
@@ -98,7 +98,7 @@ const handleRequest = frames(async (ctx) => {
     image: (
       <div tw="flex flex-col w-[100%] h-[100%]">
         <img
-          src={`${getFrameUrl()}/images/frame_bet_status.png`}
+          src={`${getFrameUrl()}/images/frame_base.png`}
           width={"100%"}
           height={"100%"}
           tw="relative">
