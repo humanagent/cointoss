@@ -40,6 +40,5 @@ export function agent_prompt(userInfo: UserInfo) {
   3. will it rain tomorrow for 10, ends on friday
     - /toss 'will it rain tomorrow' 'yes,no' 10 '27 Oct 2023 23:59:59 GMT'
   `;
-  console.log(systemPrompt);
   return systemPrompt;
 }

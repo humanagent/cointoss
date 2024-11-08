@@ -65,9 +65,6 @@ export const POST = frames(async (ctx) => {
       verifyingContract: process.env.USDC_CONTRACT_ADDRESS! as `0x${string}`,
     };
 
-    console.log(message, "message");
-    console.log(domain, "domain");
-
     return transaction({
       chainId: `eip155:${base.id}`,
       method: "eth_signTypedData_v4",
@@ -87,7 +84,7 @@ export const POST = frames(async (ctx) => {
   const redisClient = await getRedisClient();
   const permitHash = await redisClient.get(permitId);
 
-  console.log(permitHash, "permitHashBackend");
+  //console.log(permitHash, "permitHashBackend");
 
   if (!permitHash) {
     throw new Error("Invalid permit");
