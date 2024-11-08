@@ -34,7 +34,7 @@ export async function handleTossCreation(context: HandlerContext) {
     );
     if (tossId !== undefined) {
       await db?.read();
-      if (!db?.data?.firstToss[group.id]) {
+      if (group && !db?.data?.firstToss[group.id]) {
         db.data.firstToss[group.id] = true;
         await context.send(GROUP_MESSAGE_FIRST);
         await db.write();
