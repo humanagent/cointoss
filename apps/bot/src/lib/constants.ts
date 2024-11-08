@@ -17,7 +17,7 @@ export const TOSS_AMOUNT_REPLY =
   "Finally, How much you wanna toss with your friends? I need to know the amount in Base USDC.";
 export const TOSS_CONFIRM_REPLY =
   "Now to confirm and send the toss to your friends, please tell me which options you want to toss on. If you did something wrong, press restart to create a new toss from scratch.\n*You might need to approve USDC spending first.";
-// error messages
+// error messagess
 export const TOSS_AMOUNT_JUDGE_REPLY =
   "Who is the judge of this toss? Write the address of the person who will confirm the result of the toss.";
 export const TOSS_AMOUNT_ERROR_REPLY =
