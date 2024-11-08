@@ -275,18 +275,18 @@ const handleRequest = frames(async (ctx) => {
     image: (
       <div tw="flex flex-col w-[100%] h-[100%]">
         <img
-          src={`${getFrameUrl()}/images/frame_base.png`}
+          src={`${getFrameUrl()}/images/frame_base_home.png`}
           width={"100%"}
           height={"100%"}
           tw="relative">
-          <div tw="absolute relative flex justify-center items-center w-full h-[350px] px-[36px]">
+          <div tw="absolute relative flex justify-center items-center w-full h-[750px] px-[36px]">
             <h1
               tw="text-[#014601] text-[120px] uppercase text-center"
               style={{ fontFamily: "Vanguard-Bold", lineHeight: "80px" }}>
               {toss.condition}
             </h1>
           </div>
-
+          {/*
           <div tw="absolute top-[400px] left-[64px] flex flex-col items-center justify-center h-[408px] w-[478px]">
             <p
               tw="text-[#014601] text-[24px] uppercase"
@@ -308,7 +308,8 @@ const handleRequest = frames(async (ctx) => {
               {outcomesFormatted[1]}
             </p>
           </div>
-          <div tw="absolute top-[848px] left-[64px] flex flex-row items-center justify-between h-[150px] w-[1018px]">
+          */}
+          <div tw="absolute top-[800px] left-[64px] flex flex-row items-center justify-between h-[150px] w-[1018px]">
             <div tw="flex flex-col items-center justify-center h-[150px] w-[300px]">
               <p
                 tw="text-[#014601] text-[24px] uppercase"

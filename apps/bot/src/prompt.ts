@@ -1,6 +1,6 @@
 import { skills } from "./skills.js";
-import { UserInfo, PROMPT_USER_CONTENT } from "./lib/resolver.js";
-import { PROMPT_RULES, PROMPT_SKILLS_AND_EXAMPLES } from "./lib/gpt.js";
+import { UserInfo, PROMPT_USER_CONTENT } from "@xmtp/message-kit";
+import { PROMPT_RULES, PROMPT_SKILLS_AND_EXAMPLES } from "@xmtp/message-kit";
 
 export function agent_prompt(userInfo: UserInfo) {
   //Update the name of the agent with predefined prompt
@@ -13,7 +13,7 @@ export function agent_prompt(userInfo: UserInfo) {
   systemPrompt += PROMPT_USER_CONTENT(userInfo);
 
   //Add skills and examples to the prompt
-  systemPrompt += PROMPT_SKILLS_AND_EXAMPLES(skills, "@cointoss");
+  systemPrompt += PROMPT_SKILLS_AND_EXAMPLES(skills, "cointoss");
 
   systemPrompt += `
 
