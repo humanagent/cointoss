@@ -137,7 +137,9 @@ export async function processMultilineResponse(
           role: "system",
           content: msg,
         });
-        await context.send(response.message);
+        if (response.code !== 300) {
+          await context.send(response.message);
+        }
       }
     } else {
       await context.send(message);

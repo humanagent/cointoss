@@ -22,6 +22,7 @@ const handleRequest = frames(async (ctx) => {
     args: [BigInt(tossId)],
   });
 
+  console.log(toss);
   let outcomesFormatted = outcomes.map(
     (outcome) =>
       outcome.charAt(0).toUpperCase() + outcome.slice(1).toLowerCase(),
