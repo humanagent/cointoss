@@ -33,7 +33,14 @@ export async function handleTossCreation(context: HandlerContext) {
       params.endTime || undefined,
     );
     if (tossId !== undefined) {
-      await context.send(`Here is your toss!`);
+      await db?.read();
+      if (group && !db?.data?.firstToss[group.id]) {
+        db.data.firstToss[group.id] = true;
+        await context.send(GROUP_MESSAGE_FIRST);
+        await db.write();
+      } else {
+        await context.send(`Here is your toss!`);
+      }
       await context.send(`${getFrameUrl()}/frames/toss/${tossId}`);
       console.log("Toss created", tossId);
     } else {
@@ -117,12 +124,6 @@ export const createToss = async (
       functionName: "tossId",
     });
 
-    await db?.read();
-    if (!db?.data?.firstToss[groupid]) {
-      db.data.firstToss[groupid] = true;
-      await context.send(GROUP_MESSAGE_FIRST);
-      await db.write();
-    }
     return tossId;
   } catch (error) {
     console.error("Error creating toss:", error);

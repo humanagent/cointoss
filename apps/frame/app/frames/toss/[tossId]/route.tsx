@@ -27,7 +27,6 @@ const handleRequest = frames(async (ctx) => {
     args: [BigInt(tossId)],
   });
 
-  console.log(toss);
   let outcomesFormatted = outcomes.map(
     (outcome) =>
       outcome.charAt(0).toUpperCase() + outcome.slice(1).toLowerCase(),
@@ -279,10 +278,10 @@ const handleRequest = frames(async (ctx) => {
           width={"100%"}
           height={"100%"}
           tw="relative">
-          <div tw="absolute relative flex justify-center items-center w-full h-[750px] px-[36px]">
+          <div tw="absolute relative flex justify-center items-center w-full h-[700px] px-[36px]">
             <h1
-              tw="text-[#014601] text-[120px] uppercase text-center"
-              style={{ fontFamily: "Vanguard-Bold", lineHeight: "80px" }}>
+              tw="text-[#014601] text-[200px] uppercase text-center"
+              style={{ fontFamily: "Vanguard-Bold", lineHeight: "150px" }}>
               {toss.condition}
             </h1>
           </div>
