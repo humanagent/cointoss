@@ -51,22 +51,25 @@ export const PROMPT_RULES = `You are a helpful and playful agent called {NAME} t
 - Dont answer in markdown format, just answer in plaintext.
 - Do not make guesses or assumptions
 - Only answer if the verified information is in the prompt.
+- Current time is ${new Date().toUTCString()}.
 - Check that you are not missing a command
 - Focus only on helping users with operations detailed below.
 `;
 
 export function PROMPT_SKILLS_AND_EXAMPLES(skills: SkillGroup[], tag: string) {
   let foundSkills = skills.filter(
-    (skill) => skill.tag == `@${tag.toLowerCase()}`,
+    (skill) => skill.tag == `${tag.toLowerCase()}`,
   );
+  console.log(foundSkills);
   if (!foundSkills.length || !foundSkills[0] || !foundSkills[0].skills)
     return "";
   let returnPrompt = `\nCommands:\n${foundSkills[0].skills
     .map((skill) => skill.command)
     .join("\n")}\n\nExamples:\n${foundSkills[0].skills
-    .map((skill) => skill.examples)
+    .map((skill) => skill.examples?.join("\n"))
     .join("\n")}`;
 
+  console.log(returnPrompt);
   returnPrompt += "\n";
   return returnPrompt;
 }
@@ -130,14 +133,16 @@ export async function processMultilineResponse(
   for (const message of messages) {
     if (message.startsWith("/")) {
       const response = await context.executeSkill(message);
-      console.log(response);
+      console.log("Skill response:", message, response);
       if (response && typeof response.message === "string") {
         let msg = parseMarkdown(response.message);
         chatMemory.addEntry(memoryKey, {
           role: "system",
           content: msg,
         });
-        await context.send(response.message);
+        if (response.code !== 300) {
+          await context.send(response.message);
+        }
       }
     } else {
       await context.send(message);

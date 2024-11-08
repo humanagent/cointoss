@@ -30,13 +30,15 @@ export function agent_prompt(userInfo: UserInfo) {
   - If toss is correct. Don't return anything else than the command. Ever.
   - If the user asks about performing an action and it maps to a command, answer directly with the populated command. Always return commands with real values only.
   - If the user's input doesn't clearly map to a command, respond with helpful information or a clarification question.
-
+  - Date needs to be formatted in UTC and in the future.
   ## Examples responses
 
   1. @cointoss will it rain tomorrow? yes,no 10
     - /toss 'will it rain tomorrow' 'yes,no' 10
   2. @cointoss race to the end Fabri vs John? fabri,john 10
     - /toss 'race to the end' 'fabri,john' 10
+  3. will it rain tomorrow for 10, ends on friday
+    - /toss 'will it rain tomorrow' 'yes,no' 10 '27 Oct 2023 23:59:59 GMT'
   `;
   console.log(systemPrompt);
   return systemPrompt;

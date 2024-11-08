@@ -7,11 +7,14 @@ import { getRedisClient } from "../lib/redis.js";
 import { db } from "../lib/db.js";
 import { createPublicClient, createWalletClient, http, parseUnits } from "viem";
 import { COINTOSSBOT_ABI } from "../abi/index.js";
+import type { SkillResponse } from "@xmtp/message-kit";
 
 export function getFrameUrl() {
   return process.env.FRAME_URL || "http://localhost:3000";
 }
-export async function handleTossCreation(context: HandlerContext) {
+export async function handleTossCreation(
+  context: HandlerContext,
+): Promise<SkillResponse> {
   const {
     message: {
       content: { params },
@@ -20,16 +23,29 @@ export async function handleTossCreation(context: HandlerContext) {
     group,
   } = context;
 
-  if (params.description && params.options && params.amount) {
-    await createToss(
+  console.log("Creating toss", params);
+  if (params.description && params.options && !isNaN(Number(params.amount))) {
+    console.log("Creating toss", params);
+
+    const response = await createToss(
       context,
       params.options,
       params.amount,
       params.description,
       params.judge ?? sender.address,
       group ? group.id : sender.address,
+      params.endTime,
     );
+    console.log("Toss created", response);
+    return {
+      message: "success",
+      code: 300,
+    };
   }
+  return {
+    message: "Invalid parameters",
+    code: 400,
+  };
 }
 
 export const createToss = async (
@@ -39,6 +55,7 @@ export const createToss = async (
   description: string,
   judge: string,
   groupid: string,
+  endTime: string,
 ) => {
   //context.reply("one sec...");
   try {
@@ -65,6 +82,17 @@ export const createToss = async (
 
     const parsedAmount = BigInt(parseUnits(amountString, 6));
 
+    const date = new Date(endTime); // Example date
+    const timestamp = Math.floor(date.getTime() / 1000); // Convert to Unix timestamp
+    if (isNaN(timestamp)) {
+      console.error("Invalid endTime provided:", endTime);
+      return {
+        message: "Invalid endTime",
+        code: 400,
+      };
+    }
+
+    console.log("Creating toss", parsedAmount);
     const createTossTx = await walletClient.writeContract({
       account: account,
       abi: COINTOSSBOT_ABI,
@@ -75,7 +103,7 @@ export const createToss = async (
         description as string,
         (options as string).split(","),
         [parsedAmount, parsedAmount],
-        BigInt(0), // TODO: set endTime properly
+        BigInt(timestamp), // Ensure it's a BigNumber for uint256
         BigInt(0),
       ],
     });

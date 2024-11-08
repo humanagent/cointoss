@@ -15,14 +15,13 @@ const handleRequest = frames(async (ctx) => {
     transport: http(),
   });
 
-  const [toss, outcomes, amounts] = await publicClient.readContract({
+  const [toss] = await publicClient.readContract({
     address: process.env.COINTOSS_CONTRACT_ADDRESS as `0x${string}`,
     abi: COINTOSS_ABI,
     functionName: "tossInfo",
     args: [BigInt(tossId)],
   });
 
-  const amount = amounts[0];
   const user = await ctx.walletAddress();
 
   const redis = await getRedisClient();

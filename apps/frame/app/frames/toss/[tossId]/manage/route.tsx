@@ -2,7 +2,7 @@ import { frames } from "../../../frames";
 import { createPublicClient, formatUnits, http } from "viem";
 import { base } from "viem/chains";
 import { COINTOSS_ABI } from "@/app/abi";
-import { getProfileInfo, getFrameUrl } from "@/app/utils";
+import { getProfileInfo, getFrameUrl, parseDate } from "@/app/utils";
 import { Button } from "frames.js/next";
 
 const handleRequest = frames(async (ctx) => {
@@ -20,6 +20,13 @@ const handleRequest = frames(async (ctx) => {
     functionName: "tossInfo",
     args: [BigInt(tossId)],
   });
+
+  // Assuming toss.endTime is now part of the returned Toss struct
+  const readableDate = parseDate(toss.endTime);
+  let outcomesFormatted = outcomes.map(
+    (outcome) =>
+      outcome.charAt(0).toUpperCase() + outcome.slice(1).toLowerCase(),
+  );
 
   const amount = amounts[0];
   const user = await ctx.walletAddress();
@@ -111,7 +118,7 @@ const handleRequest = frames(async (ctx) => {
               Option 1
             </p>
             <p tw="text-black font-bold text-[40px] -mt-[16px]">
-              {outcomes[0]}
+              {outcomesFormatted[0]}
             </p>
           </div>
 
@@ -122,7 +129,7 @@ const handleRequest = frames(async (ctx) => {
               Option 2
             </p>
             <p tw="text-black font-bold text-[40px] -mt-[16px]">
-              {outcomes[1]}
+              {outcomesFormatted[1]}
             </p>
           </div>
           <div tw="absolute top-[848px] left-[64px] flex flex-row items-center justify-between h-[150px] w-[1018px]">
@@ -157,7 +164,7 @@ const handleRequest = frames(async (ctx) => {
               </p>
             </div>
           </div>
-          <div tw="absolute bottom-[64px] left-[64px] h-[90px] w-full flex flex-row items-center space-x-8">
+          <div tw="absolute bottom-[54px] left-[64px] h-[90px] w-full flex flex-row items-center space-x-8">
             {userProfile?.avatar ? (
               <img
                 src={userProfile.avatar}
@@ -182,7 +189,7 @@ const handleRequest = frames(async (ctx) => {
                     fontFamily: "Overpass-Regular",
                     fontWeight: 400,
                   }}>
-                  This bet ends in 24 hours
+                  Ends {readableDate}
                 </span>
               </p>
             </div>
@@ -202,26 +209,26 @@ const handleRequest = frames(async (ctx) => {
       //   target={`/set-toss-result-tx?tossId=${tossId}&outcome=0`}
       //   post_url={`/toss/${tossId}`}
       // >
-      //   {`🏆 ${outcomes[0]}`}
+      //   {`🏆 ${outcomesFormatted[0]}`}
       // </Button>,
       // <Button
       //   action="tx"
       //   target={`/set-toss-result-tx?tossId=${tossId}&outcome=1`}
       //   post_url={`/toss/${tossId}`}
       // >
-      //   {`🏆 ${outcomes[1]}`}
+      //   {`🏆 ${outcomesFormatted[1]}`}
       // </Button>,
       <Button
         action="tx"
         target={`/set-toss-result-tx?tossId=${tossId}&outcome=0`}
         post_url={`/set-toss-result-tx/success?tossId=${tossId}&outcome=0`}>
-        {`🏆 ${outcomes[0]}`}
+        {`🏆 ${outcomesFormatted[0]}`}
       </Button>,
       <Button
         action="tx"
         target={`/set-toss-result-tx?tossId=${tossId}&outcome=1`}
         post_url={`/set-toss-result-tx/success?tossId=${tossId}&outcome=1`}>
-        {`🏆 ${outcomes[1]}`}
+        {`🏆 ${outcomesFormatted[1]}`}
       </Button>,
       <Button action="post" target={`/toss/${tossId}/cancel`}>
         ❌ Cancel

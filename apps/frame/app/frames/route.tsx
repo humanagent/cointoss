@@ -8,26 +8,11 @@ const handleRequest = frames(async (ctx) => {
         style={{
           display: "flex",
           flexDirection: "column",
+          color: "#25B618",
         }}>
         Cointoss
       </div>
     ),
-    textInput: "Type something here",
-    buttons: [
-      <Button
-        action="link"
-        target={
-          "https://github.com/builders-garden/open-frames-starter-framesjs"
-        }>
-        Link
-      </Button>,
-      <Button action="post" target={"/post"}>
-        Post
-      </Button>,
-      <Button action="tx" target={"/tx"} post_url={"/tx/success"}>
-        Tx
-      </Button>,
-    ],
   };
 });
 
