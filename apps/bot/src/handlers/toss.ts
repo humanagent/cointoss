@@ -57,7 +57,6 @@ export const createToss = async (
   amount: string,
   description: string,
   judge: string,
-  groupid: string,
   endTime?: string,
 ) => {
   try {
