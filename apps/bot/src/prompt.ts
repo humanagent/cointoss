@@ -13,7 +13,7 @@ export function agent_prompt(userInfo: UserInfo) {
   systemPrompt += PROMPT_USER_CONTENT(userInfo);
 
   //Add skills and examples to the prompt
-  systemPrompt += PROMPT_SKILLS_AND_EXAMPLES(skills, "cointoss");
+  systemPrompt += PROMPT_SKILLS_AND_EXAMPLES(skills, "@cointoss");
 
   systemPrompt += `
 

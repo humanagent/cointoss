@@ -3067,9 +3067,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xmtp/message-kit@npm:^1.1.7-beta.7":
-  version: 1.1.7-beta.7
-  resolution: "@xmtp/message-kit@npm:1.1.7-beta.7"
+"@xmtp/message-kit@npm:^1.1.7-beta.9":
+  version: 1.1.7-beta.9
+  resolution: "@xmtp/message-kit@npm:1.1.7-beta.9"
   dependencies:
     "@xmtp/content-type-primitives": "npm:^1.0.2"
     "@xmtp/content-type-reaction": "npm:^1.1.10"
@@ -3081,7 +3081,7 @@ __metadata:
     "@xmtp/xmtp-js": "npm:^13.0.3"
     dotenv: "npm:^16.4.5"
     viem: "npm:^2.16.3"
-  checksum: 10/e64f8547f7fe27a6a3c9abb1828780f7b2f23050b220c30340142151e93145dc166aa46b9d355b4123da6466f64f8db2422ad64b31b70a0b383618c896b991c3
+  checksum: 10/826a0f6aab7f5d7f3716f1fc4af155d492276aa4821be202a45efb233fd7afa3dfabcaabad818e7fc8969cecd420a5f093939d8e83b5746268567f28bdf9e523
   languageName: node
   linkType: hard
 
@@ -4224,7 +4224,7 @@ __metadata:
     "@types/node": "npm:^20.14.2"
     "@types/timestring": "npm:^6.0.5"
     "@types/uuid": "npm:^10.0.0"
-    "@xmtp/message-kit": "npm:^1.1.7-beta.7"
+    "@xmtp/message-kit": "npm:^1.1.7-beta.9"
     lowdb: "npm:^7.0.1"
     nodemon: "npm:^3.1.3"
     openai: "npm:^4.58.1"
