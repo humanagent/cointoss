@@ -26,6 +26,7 @@ export async function handleTossCreation(
   console.log("Creating toss", params);
   if (params.description && params.options && !isNaN(Number(params.amount))) {
     console.log("Creating toss", params);
+
     const response = await createToss(
       context,
       params.options,
@@ -33,6 +34,7 @@ export async function handleTossCreation(
       params.description,
       params.judge ?? sender.address,
       group ? group.id : sender.address,
+      params.endTime,
     );
     console.log("Toss created", response);
     return {
@@ -53,6 +55,7 @@ export const createToss = async (
   description: string,
   judge: string,
   groupid: string,
+  endTime: string,
 ) => {
   //context.reply("one sec...");
   try {
@@ -79,6 +82,16 @@ export const createToss = async (
 
     const parsedAmount = BigInt(parseUnits(amountString, 6));
 
+    const date = new Date(endTime); // Example date
+    const timestamp = Math.floor(date.getTime() / 1000); // Convert to Unix timestamp
+    if (isNaN(timestamp)) {
+      console.error("Invalid endTime provided:", endTime);
+      return {
+        message: "Invalid endTime",
+        code: 400,
+      };
+    }
+
     console.log("Creating toss", parsedAmount);
     const createTossTx = await walletClient.writeContract({
       account: account,
@@ -90,7 +103,7 @@ export const createToss = async (
         description as string,
         (options as string).split(","),
         [parsedAmount, parsedAmount],
-        BigInt(0), // TODO: set endTime properly
+        BigInt(timestamp), // Ensure it's a BigNumber for uint256
         BigInt(0),
       ],
     });

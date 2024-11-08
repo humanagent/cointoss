@@ -3,7 +3,12 @@ import { createPublicClient, erc20Abi, formatUnits, http } from "viem";
 import { base } from "viem/chains";
 
 import { COINTOSS_ABI } from "@/app/abi";
-import { TossStatus, getProfileInfo, getFrameUrl } from "@/app/utils";
+import {
+  TossStatus,
+  getProfileInfo,
+  getFrameUrl,
+  parseDate,
+} from "@/app/utils";
 import { Button } from "frames.js/next";
 import { getRedisClient } from "@/lib/redis";
 
@@ -30,6 +35,8 @@ const handleRequest = frames(async (ctx) => {
     functionName: "tossInfo",
     args: [BigInt(tossId)],
   });
+  // Assuming toss.endTime is now part of the returned Toss struct
+  const readableDate = parseDate(toss.endTime);
 
   let outcomesFormatted = outcomes.map(
     (outcome) =>
@@ -235,7 +242,7 @@ const handleRequest = frames(async (ctx) => {
                 </p>
               </div>
             </div>
-            <div tw="absolute bottom-[64px] left-[64px] h-[90px] w-full flex flex-row items-center space-x-8">
+            <div tw="absolute bottom-[54px] left-[64px] h-[90px] w-full flex flex-row items-center space-x-8">
               {userProfile?.avatar ? (
                 <img
                   src={userProfile.avatar}
@@ -260,7 +267,7 @@ const handleRequest = frames(async (ctx) => {
                       fontFamily: "Overpass-Regular",
                       fontWeight: 400,
                     }}>
-                    This bet ends in 24 hours
+                    Ends {readableDate}
                   </span>
                 </p>
               </div>
@@ -381,7 +388,7 @@ const handleRequest = frames(async (ctx) => {
                 </p>
               </div>
             </div>
-            <div tw="absolute bottom-[64px] left-[64px] h-[90px] w-full flex flex-row items-center space-x-8">
+            <div tw="absolute bottom-[54px] left-[64px] h-[90px] w-full flex flex-row items-center space-x-8">
               {userProfile?.avatar ? (
                 <img
                   src={userProfile.avatar}
@@ -406,7 +413,7 @@ const handleRequest = frames(async (ctx) => {
                       fontFamily: "Overpass-Regular",
                       fontWeight: 400,
                     }}>
-                    This bet ends in 24 hours
+                    Ends {readableDate}
                   </span>
                 </p>
               </div>
@@ -493,7 +500,7 @@ const handleRequest = frames(async (ctx) => {
               </p>
             </div>
           </div>
-          <div tw="absolute bottom-[64px] left-[64px] h-[90px] w-full flex flex-row items-center space-x-8">
+          <div tw="absolute bottom-[54px] left-[64px] h-[90px] w-full flex flex-row items-center space-x-8">
             {userProfile?.avatar ? (
               <img
                 src={userProfile.avatar}
@@ -518,7 +525,7 @@ const handleRequest = frames(async (ctx) => {
                     fontFamily: "Overpass-Regular",
                     fontWeight: 400,
                   }}>
-                  This bet ends in 24 hours
+                  Ends {readableDate}
                 </span>
               </p>
             </div>

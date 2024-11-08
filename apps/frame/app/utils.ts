@@ -4,7 +4,18 @@ import type { UserInfo } from "../lib/resolver";
 export function getFrameUrl() {
   return process.env.FRAME_URL || "http://localhost:3000";
 }
-
+export function parseDate(endTime: bigint) {
+  const readableDate = new Date(Number(endTime) * 1000)
+    .toLocaleString("en-US", {
+      month: "long",
+      day: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      hour12: true,
+    })
+    .replace(" at ", " on the ");
+  return readableDate;
+}
 export function parseAddress(
   address: string,
   start: number = 4,
