@@ -7,11 +7,14 @@ import { getRedisClient } from "../lib/redis.js";
 import { db } from "../lib/db.js";
 import { createPublicClient, createWalletClient, http, parseUnits } from "viem";
 import { COINTOSSBOT_ABI } from "../abi/index.js";
+import type { SkillResponse } from "@xmtp/message-kit";
 
 export function getFrameUrl() {
   return process.env.FRAME_URL || "http://localhost:3000";
 }
-export async function handleTossCreation(context: HandlerContext) {
+export async function handleTossCreation(
+  context: HandlerContext,
+): Promise<SkillResponse> {
   const {
     message: {
       content: { params },
@@ -20,8 +23,10 @@ export async function handleTossCreation(context: HandlerContext) {
     group,
   } = context;
 
-  if (params.description && params.options && params.amount) {
-    await createToss(
+  console.log("Creating toss", params);
+  if (params.description && params.options && !isNaN(Number(params.amount))) {
+    console.log("Creating toss", params);
+    const response = await createToss(
       context,
       params.options,
       params.amount,
@@ -29,7 +34,16 @@ export async function handleTossCreation(context: HandlerContext) {
       params.judge ?? sender.address,
       group ? group.id : sender.address,
     );
+    console.log("Toss created", response);
+    return {
+      message: "hey",
+      code: 200,
+    };
   }
+  return {
+    message: "Invalid parameters",
+    code: 400,
+  };
 }
 
 export const createToss = async (
@@ -65,6 +79,7 @@ export const createToss = async (
 
     const parsedAmount = BigInt(parseUnits(amountString, 6));
 
+    console.log("Creating toss", parsedAmount);
     const createTossTx = await walletClient.writeContract({
       account: account,
       abi: COINTOSSBOT_ABI,

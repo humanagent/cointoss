@@ -22,6 +22,10 @@ const handleRequest = frames(async (ctx) => {
     args: [BigInt(tossId)],
   });
 
+  let outcomesFormatted = outcomes.map(
+    (outcome) =>
+      outcome.charAt(0).toUpperCase() + outcome.slice(1).toLowerCase(),
+  );
   const amount = amounts[0];
   const redis = await getRedisClient();
   const tossDataString = await redis.get(tossId);
@@ -133,11 +137,11 @@ const handleRequest = frames(async (ctx) => {
               )}
               {toss.outcomeIndex === BigInt(0) ? (
                 <p tw="text-white font-bold text-[40px] -mt-[16px]">
-                  {outcomes[0]}
+                  {outcomesFormatted[0]}
                 </p>
               ) : (
                 <p tw="text-black font-bold text-[40px] -mt-[16px]">
-                  {outcomes[0]}
+                  {outcomesFormatted[0]}
                 </p>
               )}
             </div>
@@ -158,11 +162,11 @@ const handleRequest = frames(async (ctx) => {
               )}
               {toss.outcomeIndex === BigInt(1) ? (
                 <p tw="text-white font-bold text-[40px] -mt-[16px]">
-                  {outcomes[1]}
+                  {outcomesFormatted[1]}
                 </p>
               ) : (
                 <p tw="text-black font-bold text-[40px] -mt-[16px]">
-                  {outcomes[1]}
+                  {outcomesFormatted[1]}
                 </p>
               )}
             </div>
@@ -250,10 +254,10 @@ const handleRequest = frames(async (ctx) => {
   if (toss.status === TossStatus.CREATED) {
     buttons.push(
       <Button action="post" target={`/toss/${tossId}/place-toss?outcome=0`}>
-        {`${outcomes[0]}`}
+        {`${outcomesFormatted[0]}`}
       </Button>,
       <Button action="post" target={`/toss/${tossId}/place-toss?outcome=1`}>
-        {`${outcomes[1]}`}
+        {`${outcomesFormatted[1]}`}
       </Button>,
     );
   }
@@ -281,7 +285,7 @@ const handleRequest = frames(async (ctx) => {
               Option 1
             </p>
             <p tw="text-black font-bold text-[40px] -mt-[16px]">
-              {outcomes[0]}
+              {outcomesFormatted[0]}
             </p>
           </div>
 
@@ -292,7 +296,7 @@ const handleRequest = frames(async (ctx) => {
               Option 2
             </p>
             <p tw="text-black font-bold text-[40px] -mt-[16px]">
-              {outcomes[1]}
+              {outcomesFormatted[1]}
             </p>
           </div>
           <div tw="absolute top-[848px] left-[64px] flex flex-row items-center justify-between h-[150px] w-[1018px]">

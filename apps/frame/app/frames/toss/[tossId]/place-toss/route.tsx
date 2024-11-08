@@ -31,6 +31,11 @@ const handleRequest = frames(async (ctx) => {
     args: [BigInt(tossId)],
   });
 
+  let outcomesFormatted = outcomes.map(
+    (outcome) =>
+      outcome.charAt(0).toUpperCase() + outcome.slice(1).toLowerCase(),
+  );
+
   const allowance = await publicClient.readContract({
     address: process.env.USDC_CONTRACT_ADDRESS as `0x${string}`,
     abi: erc20Abi,
@@ -107,7 +112,9 @@ const handleRequest = frames(async (ctx) => {
           action="tx"
           target={`/place-toss-tx?tossId=${tossId}&outcome=${outcome}&permitId=${permitId}`}
           post_url={`/place-toss-tx/success?tossId=${tossId}&outcome=${outcome}&permitId=${permitId}`}>
-          {outcome === "0" ? `Toss ${outcomes[0]}` : `Toss ${outcomes[0]}`}
+          {outcome === "0"
+            ? `Toss ${outcomesFormatted[0]}`
+            : `Toss ${outcomesFormatted[0]}`}
         </Button>,
       );
     }
@@ -163,11 +170,11 @@ const handleRequest = frames(async (ctx) => {
               )}
               {toss.outcomeIndex === BigInt(0) ? (
                 <p tw="text-white font-bold text-[40px] -mt-[16px]">
-                  {outcomes[0]}
+                  {outcomesFormatted[0]}
                 </p>
               ) : (
                 <p tw="text-black font-bold text-[40px] -mt-[16px]">
-                  {outcomes[0]}
+                  {outcomesFormatted[0]}
                 </p>
               )}
             </div>
@@ -188,11 +195,11 @@ const handleRequest = frames(async (ctx) => {
               )}
               {toss.outcomeIndex === BigInt(1) ? (
                 <p tw="text-white font-bold text-[40px] -mt-[16px]">
-                  {outcomes[1]}
+                  {outcomesFormatted[1]}
                 </p>
               ) : (
                 <p tw="text-black font-bold text-[40px] -mt-[16px]">
-                  {outcomes[1]}
+                  {outcomesFormatted[1]}
                 </p>
               )}
             </div>
@@ -309,11 +316,11 @@ const handleRequest = frames(async (ctx) => {
               )}
               {toss.outcomeIndex === BigInt(0) ? (
                 <p tw="text-white font-bold text-[40px] -mt-[16px]">
-                  {outcomes[0]}
+                  {outcomesFormatted[0]}
                 </p>
               ) : (
                 <p tw="text-black font-bold text-[40px] -mt-[16px]">
-                  {outcomes[0]}
+                  {outcomesFormatted[0]}
                 </p>
               )}
             </div>
@@ -334,11 +341,11 @@ const handleRequest = frames(async (ctx) => {
               )}
               {toss.outcomeIndex === BigInt(1) ? (
                 <p tw="text-white font-bold text-[40px] -mt-[16px]">
-                  {outcomes[1]}
+                  {outcomesFormatted[1]}
                 </p>
               ) : (
                 <p tw="text-black font-bold text-[40px] -mt-[16px]">
-                  {outcomes[1]}
+                  {outcomesFormatted[1]}
                 </p>
               )}
             </div>
@@ -440,7 +447,7 @@ const handleRequest = frames(async (ctx) => {
               Option 1
             </p>
             <p tw="text-black font-bold text-[40px] -mt-[16px]">
-              {outcomes[0]}
+              {outcomesFormatted[0]}
             </p>
           </div>
 
@@ -451,7 +458,7 @@ const handleRequest = frames(async (ctx) => {
               Option 2
             </p>
             <p tw="text-black font-bold text-[40px] -mt-[16px]">
-              {outcomes[1]}
+              {outcomesFormatted[1]}
             </p>
           </div>
           <div tw="absolute top-[848px] left-[64px] flex flex-row items-center justify-between h-[150px] w-[1018px]">

@@ -23,6 +23,10 @@ const handleRequest = frames(async (ctx) => {
     args: [BigInt(tossId!)],
   });
 
+  let outcomesFormatted = outcomes.map(
+    (outcome) =>
+      outcome.charAt(0).toUpperCase() + outcome.slice(1).toLowerCase(),
+  );
   const amount = amounts[0];
 
   const userProfile = await getProfileInfo(toss.admin);
@@ -75,7 +79,7 @@ const handleRequest = frames(async (ctx) => {
               Option 1
             </p>
             <p tw="text-black font-bold text-[40px] -mt-[16px]">
-              {outcomes[0]}
+              {outcomesFormatted[0]}
             </p>
           </div>
 
@@ -86,7 +90,7 @@ const handleRequest = frames(async (ctx) => {
               Option 2
             </p>
             <p tw="text-black font-bold text-[40px] -mt-[16px]">
-              {outcomes[1]}
+              {outcomesFormatted[1]}
             </p>
           </div>
           <div tw="absolute top-[848px] left-[64px] flex flex-row items-center justify-between h-[150px] w-[1018px]">

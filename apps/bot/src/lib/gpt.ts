@@ -130,7 +130,7 @@ export async function processMultilineResponse(
   for (const message of messages) {
     if (message.startsWith("/")) {
       const response = await context.executeSkill(message);
-      console.log(response);
+      console.log("Skill response:", message, response);
       if (response && typeof response.message === "string") {
         let msg = parseMarkdown(response.message);
         chatMemory.addEntry(memoryKey, {
