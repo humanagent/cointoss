@@ -78,9 +78,15 @@ const handleRequest = frames(async (ctx) => {
               style={{ lineHeight: 0.1 }}>
               Option 1
             </p>
-            <p tw="text-black font-bold text-[40px] -mt-[16px]">
-              {outcomesFormatted[0]}
-            </p>
+            {Number(outcome) === 0 ? (
+              <p tw="text-white font-bold text-[40px] -mt-[16px]">
+                {outcomesFormatted[0]}
+              </p>
+            ) : (
+              <p tw="text-black font-bold text-[40px] -mt-[16px]">
+                {outcomesFormatted[0]}
+              </p>
+            )}
           </div>
 
           <div tw="absolute top-[400px] right-[64px] flex flex-col items-center justify-center h-[408px] w-[478px]">
@@ -89,9 +95,15 @@ const handleRequest = frames(async (ctx) => {
               style={{ lineHeight: 0.1 }}>
               Option 2
             </p>
-            <p tw="text-black font-bold text-[40px] -mt-[16px]">
-              {outcomesFormatted[1]}
-            </p>
+            {Number(outcome) === 1 ? (
+              <p tw="text-white font-bold text-[40px] -mt-[16px]">
+                {outcomesFormatted[1]}
+              </p>
+            ) : (
+              <p tw="text-black font-bold text-[40px] -mt-[16px]">
+                {outcomesFormatted[1]}
+              </p>
+            )}
           </div>
           <div tw="absolute top-[848px] left-[64px] flex flex-row items-center justify-between h-[150px] w-[1018px]">
             <div tw="flex flex-col items-center justify-center h-[150px] w-[300px]">
