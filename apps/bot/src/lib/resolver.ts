@@ -108,10 +108,10 @@ export const getUserInfo = async (
       }),
     });
     const converseData = (await response.json()) as ConverseProfile;
-    if (process.env.MSG_LOG)
-      console.log("Converse data", keyToUse, converseData);
-    data.converseUsername =
-      converseData?.formattedName || converseData?.name || undefined;
+    if (process.env.MSG_LOG === "true")
+      // console.log("Converse data", keyToUse, converseData);
+      data.converseUsername =
+        converseData?.formattedName || converseData?.name || undefined;
     data.address = converseData?.address || undefined;
     data.avatar = converseData?.avatar || undefined;
   }
@@ -131,8 +131,7 @@ export const isOnXMTP = async (
 
 export const PROMPT_USER_CONTENT = (userInfo: UserInfo) => {
   let { address, ensDomain, converseUsername, preferredName } = userInfo;
-  let prompt = `
-User context: 
+  let prompt = `\nUser context: 
 - Start by fetch their domain from or Convese username
 - Call the user by their name or domain, in case they have one
 - Ask for a name (if they don't have one) so you can suggest domains.
@@ -141,11 +140,31 @@ User context:
   if (ensDomain) prompt += `\n- User ENS domain is: ${ensDomain}`;
   if (converseUsername)
     prompt += `\n- Converse username is: ${converseUsername}`;
+  prompt += "\n";
+  return prompt;
+};
 
-  prompt = prompt.replace("{ADDRESS}", address || "");
-  prompt = prompt.replace("{ENS_DOMAIN}", ensDomain || "");
-  prompt = prompt.replace("{CONVERSE_USERNAME}", converseUsername || "");
-  prompt = prompt.replace("{PREFERRED_NAME}", preferredName || "");
-
+export const PROMPT_REPLACE_VARIABLES = (
+  prompt: string,
+  address: string,
+  userInfo: UserInfo | undefined,
+  tag: string,
+) => {
+  if (!userInfo) {
+    userInfo = {
+      preferredName: address,
+      address: address,
+      ensDomain: address,
+      converseUsername: address,
+    };
+  }
+  prompt = prompt.replace("{ADDRESS}", userInfo.address || "");
+  prompt = prompt.replace("{ENS_DOMAIN}", userInfo.ensDomain || "");
+  prompt = prompt.replace(
+    "{CONVERSE_USERNAME}",
+    userInfo.converseUsername || "",
+  );
+  prompt = prompt.replace("{PREFERRED_NAME}", userInfo.preferredName || "");
+  prompt = prompt.replace("{NAME}", tag);
   return prompt;
 };

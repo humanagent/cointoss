@@ -9,10 +9,10 @@ export const TAG_NAME = "@cointoss"; /*
 export const TOSS_MESSAGE_REPLY =
   "Hi, if you want to create a new toss send me a message saying “/toss create” and follow all the steps that I list.";
 export const TOSS_CREATE_REPLY =
-  "Alright. What's the toss gonna be about? Write a description like “Who is gonna win the Euro Cup?”. Remember bets allow only two options to toss on (boolean conditions).";
-export const TOSS_LIST_REPLY = "Here the pending bets that you created:";
+  "Alright. What's the toss gonna be about? Write a description like “Who is gonna win the Euro Cup?”. Remember a toss allow only two options to toss on (boolean conditions).";
+export const TOSS_LIST_REPLY = "Here the pending tosses that you created:";
 export const TOSS_OPTIONS_REPLY =
-  "Perfect, what are the betting options the you want to toss on? Separate them with “,” (comma) please.";
+  "Perfect, what are the toss options the you want to toss on? Separate them with “,” (comma) please.";
 export const TOSS_AMOUNT_REPLY =
   "Finally, How much you wanna toss with your friends? I need to know the amount in Base USDC.";
 export const TOSS_CONFIRM_REPLY =

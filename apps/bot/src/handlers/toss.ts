@@ -65,7 +65,7 @@ export const createToss = async (
 
     const parsedAmount = BigInt(parseUnits(amountString, 6));
 
-    const createBetTx = await walletClient.writeContract({
+    const createTossTx = await walletClient.writeContract({
       account: account,
       abi: COINTOSSBOT_ABI,
       address: process.env.COINTOSS_CONTRACT_ADDRESS! as `0x${string}`,
@@ -85,7 +85,7 @@ export const createToss = async (
     });
 
     await publicClient.waitForTransactionReceipt({
-      hash: createBetTx,
+      hash: createTossTx,
     });
     const tossId = await publicClient.readContract({
       address: process.env.COINTOSS_CONTRACT_ADDRESS! as `0x${string}`,
