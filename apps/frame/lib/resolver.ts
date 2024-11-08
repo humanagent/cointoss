@@ -1,11 +1,10 @@
 import { isAddress } from "viem";
-import { Client as ClientV3 } from "@xmtp/node-sdk";
-import { Client as ClientV2 } from "@xmtp/xmtp-js";
-import type { HandlerContext } from "@xmtp/message-kit";
+import { V2Client, V3Client } from "@xmtp/message-kit";
+import { HandlerContext } from "@xmtp/message-kit";
 
-export const converseEndpointURL =
-  "https://converse-website-git-endpoit-ephemerahq.vercel.app";
-//export const converseEndpointURL = "http://localhost:3000";
+export const converseEndpointURL = "https://converse.xyz/profile/";
+//"https://converse-website-git-endpoit-ephemerahq.vercel.app";
+//"http://localhost:3000");
 
 export type InfoCache = Map<string, UserInfo>;
 export type ConverseProfile = {
@@ -46,8 +45,12 @@ export interface EnsData {
 
 let infoCache: InfoCache = new Map();
 
-export const clearInfoCache = () => {
-  infoCache.clear();
+export const clearInfoCache = (address?: string) => {
+  if (address) {
+    infoCache.delete(address);
+  } else {
+    infoCache.clear();
+  }
 };
 export const getUserInfo = async (
   key: string,
@@ -137,7 +140,7 @@ export const getUserInfo = async (
       // Fetch Converse profile data
       try {
         const username = keyToUse.replace("@", "");
-        const converseEndpoint = `${converseEndpointURL}/profile/${username}`;
+        const converseEndpoint = `${converseEndpointURL}${username}`;
         const response = await fetch(converseEndpoint, {
           method: "POST",
           headers: {
@@ -180,21 +183,19 @@ export const getUserInfo = async (
   }
 };
 export const isOnXMTP = async (
-  v3client: ClientV3,
-  v2client: ClientV2,
+  v3client: V3Client,
+  v2client: V2Client,
   address: string | undefined,
 ) => {
-  let v2 = false;
-  let v3 = false;
-  if (address) v3 = (await v3client.canMessage([address]))[address];
-  if (address) v2 = await v2client.canMessage(address);
-  return { v2, v3 };
+  let lowerAddress = address?.toLowerCase();
+  let v2 = await v2client.canMessage(lowerAddress || "");
+  let v3 = await v3client.canMessage([lowerAddress || ""]);
+  return { v2, v3: v3[lowerAddress || ""] };
 };
 
 export const PROMPT_USER_CONTENT = (userInfo: UserInfo) => {
   let { address, ensDomain, converseUsername, preferredName } = userInfo;
-  let prompt = `
-User context: 
+  let prompt = `\n\nUser context: 
 - Start by fetch their domain from or Convese username
 - Call the user by their name or domain, in case they have one
 - Ask for a name (if they don't have one) so you can suggest domains.
@@ -203,7 +204,7 @@ User context:
   if (ensDomain) prompt += `\n- User ENS domain is: ${ensDomain}`;
   if (converseUsername)
     prompt += `\n- Converse username is: ${converseUsername}`;
-
+  prompt += "\n\n";
   return prompt;
 };
 
