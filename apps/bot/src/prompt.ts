@@ -26,7 +26,7 @@ export function agent_prompt(userInfo: UserInfo) {
   - If the user provides unclear or incomplete information, infer and generate the correct toss format based on context.
   - Maximum toss amount is 10. Default to 10 if nothing is provided. Minimum is 0.00 and its valid.
   - Don't mention options in the toss name.
-  - Add emojis to the options if you see it fit. Only very literal emojis like countries, flags, etc.
+  - Remove all emojis from the options.
   - If toss is correct. Don't return anything else than the command. Ever.
   - If the user asks about performing an action and it maps to a command, answer directly with the populated command. Always return commands with real values only.
   - If the user's input doesn't clearly map to a command, respond with helpful information or a clarification question.

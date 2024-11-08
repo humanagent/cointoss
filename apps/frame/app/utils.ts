@@ -1,3 +1,6 @@
+import { getUserInfo } from "../lib/resolver";
+import type { UserInfo } from "../lib/resolver";
+
 export function getFrameUrl() {
   return process.env.FRAME_URL || "http://localhost:3000";
 }
@@ -10,7 +13,10 @@ export function parseAddress(
   if (!address) return "";
   return `${address.slice(0, start)}...${address.slice(end)}`;
 }
-
+export const getProfileInfo = async (address: string) => {
+  let profileInfo = await getUserInfo(address);
+  return profileInfo as UserInfo;
+};
 export enum TossStatus {
   CREATED = 0,
   PAID = 1,
@@ -18,7 +24,7 @@ export enum TossStatus {
   RESOLVED = 3,
 }
 
-export const getImageAndENS = async (address: string) => {
+const getImageAndENS = async (address: string) => {
   const url = `https://app.icebreaker.xyz/api/v1/eth/${address.toLowerCase()}`;
   const headers = { "Content-Type": "application/json" };
 

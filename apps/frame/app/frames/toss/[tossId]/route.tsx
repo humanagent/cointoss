@@ -2,12 +2,7 @@ import { frames } from "../../frames";
 import { createPublicClient, formatUnits, http } from "viem";
 import { base } from "viem/chains";
 import { COINTOSS_ABI } from "@/app/abi";
-import {
-  TossStatus,
-  getImageAndENS,
-  parseAddress,
-  getFrameUrl,
-} from "@/app/utils";
+import { TossStatus, getProfileInfo, getFrameUrl } from "@/app/utils";
 import { Button } from "frames.js/next";
 import { getRedisClient } from "@/lib/redis";
 
@@ -49,8 +44,7 @@ const handleRequest = frames(async (ctx) => {
     }),
   ]);
 
-  const { avatarUrl, ens } = await getImageAndENS(toss.admin);
-  console.log(avatarUrl, ens);
+  const userProfile = await getProfileInfo(toss.admin);
 
   const totalPlayers = outcomeOnePlayers.length + outcomeTwoPlayers.length;
 
@@ -205,21 +199,31 @@ const handleRequest = frames(async (ctx) => {
               </div>
             </div>
             <div tw="absolute bottom-[64px] left-[64px] h-[90px] w-full flex flex-row items-center space-x-8">
-              {avatarUrl ? (
-                <img src={avatarUrl} tw="h-[72px] w-[72px] rounded-full" />
+              {userProfile?.avatar ? (
+                <img
+                  src={userProfile.avatar}
+                  tw="h-[72px] w-[72px] rounded-full"
+                />
               ) : (
                 <div tw="h-[72px] w-[72px] rounded-full bg-gray-200 flex" />
               )}
               <div tw="flex flex-col items-start ml-2">
-                <p tw="text-[26px]">
-                  Created by{" "}
+                <p tw="text-[26px] flex flex-col">
                   <span
                     tw="font-bold ml-2"
                     style={{
                       fontFamily: "Overpass-Bold",
                       fontWeight: 700,
                     }}>
-                    {ens ? ens : parseAddress(toss.admin)}
+                    Created by {userProfile?.preferredName}
+                  </span>
+                  <span
+                    tw="font-bold ml-2"
+                    style={{
+                      fontFamily: "Overpass-Regular",
+                      fontWeight: 400,
+                    }}>
+                    This bet ends in 24 hours
                   </span>
                 </p>
               </div>
@@ -246,10 +250,10 @@ const handleRequest = frames(async (ctx) => {
   if (toss.status === TossStatus.CREATED) {
     buttons.push(
       <Button action="post" target={`/toss/${tossId}/place-toss?outcome=0`}>
-        {`🔵 ${outcomes[0]}`}
+        {`${outcomes[0]}`}
       </Button>,
       <Button action="post" target={`/toss/${tossId}/place-toss?outcome=1`}>
-        {`🔴 ${outcomes[1]}`}
+        {`${outcomes[1]}`}
       </Button>,
     );
   }
@@ -324,21 +328,31 @@ const handleRequest = frames(async (ctx) => {
             </div>
           </div>
           <div tw="absolute bottom-[64px] left-[64px] h-[90px] w-full flex flex-row items-center space-x-8">
-            {avatarUrl ? (
-              <img src={avatarUrl} tw="h-[72px] w-[72px] rounded-full" />
+            {userProfile?.avatar ? (
+              <img
+                src={userProfile.avatar}
+                tw="h-[72px] w-[72px] rounded-full"
+              />
             ) : (
               <div tw="h-[72px] w-[72px] rounded-full bg-gray-200 flex" />
             )}
             <div tw="flex flex-col items-start ml-2">
-              <p tw="text-[26px]">
-                Created by{" "}
+              <p tw="text-[26px] flex flex-col">
                 <span
                   tw="font-bold ml-2"
                   style={{
                     fontFamily: "Overpass-Bold",
                     fontWeight: 700,
                   }}>
-                  {ens ? ens : parseAddress(toss.admin)}
+                  Created by {userProfile?.preferredName}
+                </span>
+                <span
+                  tw="font-bold ml-2"
+                  style={{
+                    fontFamily: "Overpass-Regular",
+                    fontWeight: 400,
+                  }}>
+                  This bet ends in 24 hours
                 </span>
               </p>
             </div>

@@ -15,11 +15,11 @@ export const skills: SkillGroup[] = [
         handler: handleTossCreation,
         triggers: ["/toss"],
         examples: [
-          "/toss 'Shane vs John at pickeball' 'yes,no' 10",
-          "/toss 'Will argentina win the world cup' 'yes,no' 10",
+          "/toss 'Shane vs John at pickeball' 'Yes,No' 10",
+          "/toss 'Will argentina win the world cup' 'Yes,No' 10",
           "/toss 'Race to the end' 'Fabri,John' 10",
-          "/toss 'Will argentina win the world cup' 'yes,no' 10",
-          "/toss 'Will it rain tomorrow' 'yes,no' 0",
+          "/toss 'Will argentina win the world cup' 'Yes,No' 5",
+          "/toss 'Will it rain tomorrow' 'Yes,No' 0",
         ],
         params: {
           description: {

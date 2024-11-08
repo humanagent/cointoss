@@ -1,13 +1,9 @@
 import { frames } from "../../../frames";
 import { createPublicClient, erc20Abi, formatUnits, http } from "viem";
 import { base } from "viem/chains";
+
 import { COINTOSS_ABI } from "@/app/abi";
-import {
-  TossStatus,
-  getImageAndENS,
-  parseAddress,
-  getFrameUrl,
-} from "@/app/utils";
+import { TossStatus, getProfileInfo, getFrameUrl } from "@/app/utils";
 import { Button } from "frames.js/next";
 import { getRedisClient } from "@/lib/redis";
 
@@ -92,7 +88,7 @@ const handleRequest = frames(async (ctx) => {
     hasHash = true;
   }
 
-  const { avatarUrl, ens } = await getImageAndENS(toss.admin);
+  const userProfile = await getProfileInfo(toss.admin);
 
   const buttons = [];
   if (toss.status === TossStatus.CREATED && !playerHasTossed) {
@@ -111,9 +107,7 @@ const handleRequest = frames(async (ctx) => {
           action="tx"
           target={`/place-toss-tx?tossId=${tossId}&outcome=${outcome}&permitId=${permitId}`}
           post_url={`/place-toss-tx/success?tossId=${tossId}&outcome=${outcome}&permitId=${permitId}`}>
-          {outcome === "0"
-            ? `🔵 Toss ${outcomes[0]}`
-            : `🔴 Toss ${outcomes[0]}`}
+          {outcome === "0" ? `Toss ${outcomes[0]}` : `Toss ${outcomes[0]}`}
         </Button>,
       );
     }
@@ -235,21 +229,31 @@ const handleRequest = frames(async (ctx) => {
               </div>
             </div>
             <div tw="absolute bottom-[64px] left-[64px] h-[90px] w-full flex flex-row items-center space-x-8">
-              {avatarUrl ? (
-                <img src={avatarUrl} tw="h-[72px] w-[72px] rounded-full" />
+              {userProfile?.avatar ? (
+                <img
+                  src={userProfile.avatar}
+                  tw="h-[72px] w-[72px] rounded-full"
+                />
               ) : (
                 <div tw="h-[72px] w-[72px] rounded-full bg-gray-200 flex" />
               )}
               <div tw="flex flex-col items-start ml-2">
-                <p tw="text-[26px]">
-                  Created by{" "}
+                <p tw="text-[26px] flex flex-col">
                   <span
                     tw="font-bold ml-2"
                     style={{
                       fontFamily: "Overpass-Bold",
                       fontWeight: 700,
                     }}>
-                    {ens ? ens : parseAddress(toss.admin)}
+                    Created by {userProfile?.preferredName}
+                  </span>
+                  <span
+                    tw="font-bold ml-2"
+                    style={{
+                      fontFamily: "Overpass-Regular",
+                      fontWeight: 400,
+                    }}>
+                    This bet ends in 24 hours
                   </span>
                 </p>
               </div>
@@ -371,21 +375,31 @@ const handleRequest = frames(async (ctx) => {
               </div>
             </div>
             <div tw="absolute bottom-[64px] left-[64px] h-[90px] w-full flex flex-row items-center space-x-8">
-              {avatarUrl ? (
-                <img src={avatarUrl} tw="h-[72px] w-[72px] rounded-full" />
+              {userProfile?.avatar ? (
+                <img
+                  src={userProfile.avatar}
+                  tw="h-[72px] w-[72px] rounded-full"
+                />
               ) : (
                 <div tw="h-[72px] w-[72px] rounded-full bg-gray-200 flex" />
               )}
               <div tw="flex flex-col items-start ml-2">
-                <p tw="text-[26px]">
-                  Created by{" "}
+                <p tw="text-[26px] flex flex-col">
                   <span
                     tw="font-bold ml-2"
                     style={{
                       fontFamily: "Overpass-Bold",
                       fontWeight: 700,
                     }}>
-                    {ens ? ens : parseAddress(toss.admin)}
+                    Created by {userProfile?.preferredName}
+                  </span>
+                  <span
+                    tw="font-bold ml-2"
+                    style={{
+                      fontFamily: "Overpass-Regular",
+                      fontWeight: 400,
+                    }}>
+                    This bet ends in 24 hours
                   </span>
                 </p>
               </div>
@@ -473,21 +487,31 @@ const handleRequest = frames(async (ctx) => {
             </div>
           </div>
           <div tw="absolute bottom-[64px] left-[64px] h-[90px] w-full flex flex-row items-center space-x-8">
-            {avatarUrl ? (
-              <img src={avatarUrl} tw="h-[72px] w-[72px] rounded-full" />
+            {userProfile?.avatar ? (
+              <img
+                src={userProfile.avatar}
+                tw="h-[72px] w-[72px] rounded-full"
+              />
             ) : (
               <div tw="h-[72px] w-[72px] rounded-full bg-gray-200 flex" />
             )}
             <div tw="flex flex-col items-start ml-2">
-              <p tw="text-[26px]">
-                Created by{" "}
+              <p tw="text-[26px] flex flex-col">
                 <span
                   tw="font-bold ml-2"
                   style={{
                     fontFamily: "Overpass-Bold",
                     fontWeight: 700,
                   }}>
-                  {ens ? ens : parseAddress(toss.admin)}
+                  Created by {userProfile?.preferredName}
+                </span>
+                <span
+                  tw="font-bold ml-2"
+                  style={{
+                    fontFamily: "Overpass-Regular",
+                    fontWeight: 400,
+                  }}>
+                  This bet ends in 24 hours
                 </span>
               </p>
             </div>
