@@ -1,48 +1,111 @@
 import { v4 as uuidv4 } from "uuid";
-import { HandlerContext } from "@xmtp/message-kit";
+import { skillAction, XMTPContext, getUserInfo } from "@xmtp/message-kit";
 import { privateKeyToAccount } from "viem/accounts";
-import {
-  GROUP_MESSAGE_FIRST,
-  TOSS_LIST_REPLY,
-  NO_PENDING_BETS_ERROR,
-} from "../lib/constants.js";
+import { GROUP_MESSAGE_FIRST } from "../lib/constants.js";
 import { base } from "viem/chains";
 import { getRedisClient } from "../lib/redis.js";
 import { db } from "../lib/db.js";
 import { createPublicClient, createWalletClient, http, parseUnits } from "viem";
-import { COINTOSSBOT_ABI } from "../abi/index.js";
+import { COINTOSSBOT_ABI } from "../lib/abi.js";
+import { frameUrl } from "../index.js";
 
-export async function handleTossCreation(context: HandlerContext) {
+export const registerSkill: skillAction[] = [
+  {
+    skill:
+      "/toss [description] [options (separated by comma)] [amount] [judge(optional)] [endTime(optional)]",
+    description:
+      "Create a toss with a description, options, amount and judge(optional).",
+    handler: handleTossCreation,
+    examples: [
+      "/toss 'Shane vs John at pickeball' 'Yes,No' 10",
+      "/toss 'Will argentina win the world cup' 'Yes,No' 10",
+      "/toss 'Race to the end' 'Fabri,John' 10 @fabri",
+      "/toss 'Will argentina win the world cup' 'Yes,No' 5 '27 Oct 2023 23:59:59 GMT'",
+      "/toss 'Will the niks win on sunday?' 'Yes,No' 10 vitalik.eth '27 Oct 2023 23:59:59 GMT'",
+      "/toss 'Will it rain tomorrow' 'Yes,No' 0",
+    ],
+    params: {
+      description: {
+        type: "quoted",
+      },
+      options: {
+        default: "Yes, No",
+        type: "quoted",
+      },
+      amount: {
+        type: "number",
+      },
+      judge: {
+        type: "username",
+      },
+      endTime: {
+        type: "quoted",
+      },
+    },
+  },
+];
+
+export async function handleTossCreation(context: XMTPContext) {
   const {
     message: {
-      content: { content, params },
+      content: { params },
       sender,
-      typeId,
     },
     group,
   } = context;
 
-  if (params.description && params.options && params.amount) {
-    await createToss(
+  if (params.description && params.options && !isNaN(Number(params.amount))) {
+    //await context.send("one sec...");
+    let judge = params.judge ?? sender.address;
+    if (params.judge) {
+      judge = await getUserInfo(params.judge);
+      console.log("Judge", judge);
+    }
+    console.log(
+      "Creating toss...",
       context,
       params.options,
       params.amount,
       params.description,
-      params.judge ?? sender.address,
-      group ? group.id : sender.address,
+      judge?.address,
+      params?.endTime,
     );
+    const tossId = await createToss(
+      context,
+      params.options,
+      params.amount,
+      params.description,
+      judge?.address,
+      params?.endTime,
+    );
+    if (tossId !== undefined) {
+      await db?.read();
+      if (group && !db?.data?.firstToss[group.id]) {
+        db.data.firstToss[group.id] = true;
+        await context.send(GROUP_MESSAGE_FIRST);
+        await db.write();
+      } else {
+        await context.send(
+          `Here is your toss!\n${frameUrl}/frames/toss/${tossId}`,
+        );
+      }
+      //await context.send(`${frameUrl}/frames/toss/${tossId}`);
+    } else {
+      await context.send(
+        `An error occurred while creating the toss. ${JSON.stringify(tossId)}`,
+      );
+    }
   }
 }
 
 export const createToss = async (
-  context: HandlerContext,
+  context: XMTPContext,
   options: string,
   amount: string,
   description: string,
   judge: string,
-  groupid: string,
+  endTime?: string | bigint,
 ) => {
-  //context.reply("one sec...");
   try {
     const amountString = `${amount}`;
     const uuid = uuidv4();
@@ -67,16 +130,31 @@ export const createToss = async (
 
     const parsedAmount = BigInt(parseUnits(amountString, 6));
 
-    const createBetTx = await walletClient.writeContract({
+    if (endTime) {
+      const date = new Date(endTime as string);
+      const timestamp = Math.floor(date.getTime() / 1000);
+      if (isNaN(timestamp)) {
+        console.error("Invalid endTime provided:", endTime);
+        // Fix: Correctly set a default endTime if the provided one is invalid
+        endTime = BigInt(Math.floor(new Date().getTime() / 1000) + 34 * 60);
+      } else {
+        endTime = BigInt(timestamp);
+      }
+    } else {
+      // Fix: Set a default endTime if none is provided
+      endTime = BigInt(Math.floor(new Date().getTime() / 1000) + 34 * 60);
+    }
+    const createTossTx = await walletClient.writeContract({
       account: account,
       abi: COINTOSSBOT_ABI,
       address: process.env.COINTOSS_CONTRACT_ADDRESS! as `0x${string}`,
-      functionName: "createBet",
+      functionName: "createToss",
       args: [
         judge as `0x${string}`,
         description as string,
         (options as string).split(","),
         [parsedAmount, parsedAmount],
+        endTime,
         BigInt(0),
       ],
     });
@@ -86,63 +164,19 @@ export const createToss = async (
     });
 
     await publicClient.waitForTransactionReceipt({
-      hash: createBetTx,
+      hash: createTossTx,
     });
-    const betId = await publicClient.readContract({
+    const tossId = await publicClient.readContract({
       address: process.env.COINTOSS_CONTRACT_ADDRESS! as `0x${string}`,
       abi: COINTOSSBOT_ABI,
-      functionName: "betId",
+      functionName: "tossId",
     });
 
-    await db?.read();
-    if (!db?.data?.firstToss[groupid]) {
-      db.data.firstToss[groupid] = true;
-      await context.send(GROUP_MESSAGE_FIRST);
-      await db.write();
-    } else await context.send("Here is your toss!");
-    await context.send(`${process.env.FRAME_URL}/frames/toss/${betId}`);
+    return tossId;
   } catch (error) {
     console.error("Error creating toss:", error);
     await context.send(
       "An error occurred while creating the toss. Please try again later.",
-    );
-  }
-};
-
-export const handleBetList = async (context: HandlerContext) => {
-  const {
-    message: { sender },
-  } = context;
-
-  await context.send(TOSS_LIST_REPLY);
-
-  const publicClient = createPublicClient({ chain: base, transport: http() });
-  const betPlacedEvents = await publicClient.getContractEvents({
-    abi: COINTOSSBOT_ABI,
-    address: process.env.COINTOSS_CONTRACT_ADDRESS as `0x${string}`,
-    eventName: "BetPlaced",
-    args: { bettor: sender.address as `0x${string}` },
-  });
-  const betsFrames = await Promise.all(
-    betPlacedEvents.map(async (event) => {
-      const bet = await publicClient.readContract({
-        abi: COINTOSSBOT_ABI,
-        address: process.env.COINTOSS_CONTRACT_ADDRESS as `0x${string}`,
-        functionName: "bets",
-        args: [event.args.betId!],
-      });
-      return bet[4] === 0
-        ? `${process.env.FRAME_URL}/frames/toss/${event.args.betId!}`
-        : null;
-    }),
-  );
-
-  const pendingBets = betsFrames.filter(Boolean);
-  if (pendingBets.length === 0) {
-    await context.send(NO_PENDING_BETS_ERROR);
-  } else {
-    await Promise.all(
-      pendingBets.map(async (frame) => await context.send(frame!)),
     );
   }
 };

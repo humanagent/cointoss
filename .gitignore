@@ -66,4 +66,7 @@ next-env.d.ts
 
 # remix
 .cache
+
 .data
+# vscode settings
+.vscode
