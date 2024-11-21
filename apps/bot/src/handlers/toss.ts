@@ -59,24 +59,22 @@ export async function handleTossCreation(context: XMTPContext) {
     let judge = params.judge ?? sender.address;
     if (params.judge) {
       judge = await getUserInfo(params.judge);
-      console.log("Judge", judge);
     }
     console.log(
       "Creating toss...",
-      context,
       params.options,
       params.amount,
       params.description,
-      judge?.address,
-      params?.endTime,
+      judge?.address ?? sender.address,
+      params?.endTime ?? BigInt(0),
     );
     const tossId = await createToss(
       context,
       params.options,
       params.amount,
       params.description,
-      judge?.address,
-      params?.endTime,
+      judge?.address ?? sender.address,
+      params?.endTime ?? undefined,
     );
     if (tossId !== undefined) {
       await db?.read();

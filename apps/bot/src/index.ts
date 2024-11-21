@@ -33,7 +33,6 @@ run(
       skills,
       skills[0]?.tag as string,
     );
-    console.log(prompt);
     await agentReply(context, prompt);
   },
   { skills },
