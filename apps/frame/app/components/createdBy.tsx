@@ -8,7 +8,11 @@ export default function CreatedBy({
   readableDate: string;
 }) {
   return (
-    <div tw="absolute bottom-[54px] left-[64px] h-[90px] w-full flex flex-row items-center space-x-8 mt-[-50px]">
+    <div
+      tw="absolute bottom-[77px] left-[64px] h-[90px] w-full flex flex-row items-center space-x-8"
+      style={{
+        marginTop: "-50px",
+      }}>
       {userProfile?.avatar ? (
         <img src={userProfile.avatar} tw="h-[72px] w-[72px] rounded-full" />
       ) : (

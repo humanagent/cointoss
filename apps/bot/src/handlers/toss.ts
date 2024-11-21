@@ -1,12 +1,12 @@
 import { v4 as uuidv4 } from "uuid";
-import { skillAction, XMTPContext } from "@xmtp/message-kit";
+import { skillAction, XMTPContext, getUserInfo } from "@xmtp/message-kit";
 import { privateKeyToAccount } from "viem/accounts";
 import { GROUP_MESSAGE_FIRST } from "../lib/constants.js";
 import { base } from "viem/chains";
 import { getRedisClient } from "../lib/redis.js";
 import { db } from "../lib/db.js";
 import { createPublicClient, createWalletClient, http, parseUnits } from "viem";
-import { COINTOSSBOT_ABI } from "../abi/index.js";
+import { COINTOSSBOT_ABI } from "../lib/abi.js";
 import { frameUrl } from "../index.js";
 
 export const registerSkill: skillAction[] = [
@@ -19,9 +19,9 @@ export const registerSkill: skillAction[] = [
     examples: [
       "/toss 'Shane vs John at pickeball' 'Yes,No' 10",
       "/toss 'Will argentina win the world cup' 'Yes,No' 10",
-      "/toss 'Race to the end' 'Fabri,John' 10",
+      "/toss 'Race to the end' 'Fabri,John' 10 @fabri",
       "/toss 'Will argentina win the world cup' 'Yes,No' 5 '27 Oct 2023 23:59:59 GMT'",
-      "/toss 'Will the niks win on sunday?' 'Yes,No' 10 '27 Oct 2023 23:59:59 GMT'",
+      "/toss 'Will the niks win on sunday?' 'Yes,No' 10 vitalik.eth '27 Oct 2023 23:59:59 GMT'",
       "/toss 'Will it rain tomorrow' 'Yes,No' 0",
     ],
     params: {
@@ -36,7 +36,7 @@ export const registerSkill: skillAction[] = [
         type: "number",
       },
       judge: {
-        type: "address",
+        type: "username",
       },
       endTime: {
         type: "quoted",
@@ -56,13 +56,26 @@ export async function handleTossCreation(context: XMTPContext) {
 
   if (params.description && params.options && !isNaN(Number(params.amount))) {
     //await context.send("one sec...");
-    console.log("Creating toss...", params);
+    let judge = params.judge ?? sender.address;
+    if (params.judge) {
+      judge = await getUserInfo(params.judge);
+      console.log("Judge", judge);
+    }
+    console.log(
+      "Creating toss...",
+      context,
+      params.options,
+      params.amount,
+      params.description,
+      judge?.address,
+      params?.endTime,
+    );
     const tossId = await createToss(
       context,
       params.options,
       params.amount,
       params.description,
-      params.judge ?? sender.address,
+      judge?.address,
       params?.endTime,
     );
     if (tossId !== undefined) {
@@ -72,10 +85,11 @@ export async function handleTossCreation(context: XMTPContext) {
         await context.send(GROUP_MESSAGE_FIRST);
         await db.write();
       } else {
-        await context.send(`Here is your toss!`);
+        await context.send(
+          `Here is your toss!\n${frameUrl}/frames/toss/${tossId}`,
+        );
       }
-      await context.send(`${frameUrl}/frames/toss/${tossId}`);
-      console.log("Toss created", tossId);
+      //await context.send(`${frameUrl}/frames/toss/${tossId}`);
     } else {
       await context.send(
         `An error occurred while creating the toss. ${JSON.stringify(tossId)}`,
@@ -130,7 +144,6 @@ export const createToss = async (
       // Fix: Set a default endTime if none is provided
       endTime = BigInt(Math.floor(new Date().getTime() / 1000) + 34 * 60);
     }
-    console.log(endTime);
     const createTossTx = await walletClient.writeContract({
       account: account,
       abi: COINTOSSBOT_ABI,

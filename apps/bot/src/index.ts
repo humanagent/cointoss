@@ -7,8 +7,6 @@ import {
 } from "@xmtp/message-kit";
 import { systemPrompt } from "./prompt.js";
 import { registerSkill as tossSkill } from "./handlers/toss.js";
-import fs from "fs";
-
 export const frameUrl = process.env.FRAME_URL || "http://localhost:3000";
 export const ensUrl = "https://app.ens.domains/";
 export const txpayUrl = "https://txpay.vercel.app";
@@ -33,9 +31,9 @@ run(
       systemPrompt,
       sender.address,
       skills,
-      "@ens",
+      skills[0]?.tag as string,
     );
-    fs.writeFileSync("example_prompt.md", prompt);
+    console.log(prompt);
     await agentReply(context, prompt);
   },
   { skills },

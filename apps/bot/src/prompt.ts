@@ -10,12 +10,11 @@ export const systemPrompt = `
     - "Stressed? Toss it!"
 
   {rules}
-  - Date: ${new Date().toISOString()}
 
   {user_context}
+- Message sent date: ${new Date().toISOString()}
   
   {skills}
-
 
   ## Examples scenarios
 
@@ -23,8 +22,8 @@ export const systemPrompt = `
     - /toss 'will it rain tomorrow' 'yes,no' 10 24h from now
   2. @cointoss race to the end Fabri vs John? fabri,john 10
     - /toss 'race to the end' 'fabri,john' 10
-  3. will it rain tomorrow for 10, ends on friday
-    - /toss 'will it rain tomorrow' 'yes,no' 10 '{24 hours from now}'
+  3. @cointoss will it rain tomorrow for 10 (keep the wage for 1 week), judge is @fabri
+    - /toss 'will it rain tomorrow' 'yes,no' 10 '24 hours from now' @fabri
   4. @cointoss will the stock price of company X go up tomorrow? yes,no 5
     - /toss 'will the stock price of company x go up tomorrow' 'yes,no' 5
   5. @cointoss who will win the match? team A vs team B 10
@@ -39,4 +38,5 @@ export const systemPrompt = `
     - /toss 'will the team meet the deadline' 'yes,no' 3
   10. will the event be postponed? yes,no 1
     - /toss 'will the event be postponed' 'yes,no' 1
+  
 `;
