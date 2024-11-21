@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@redis/client": "^1.6.0",
-    "@xmtp/message-kit": "latest",
+    "@xmtp/message-kit": "1.1.10-beta.5",
     "lowdb": "^7.0.1",
     "openai": "^4.58.1",
     "uuid": "^10.0.0",
