@@ -4,6 +4,7 @@ import { base } from "viem/chains";
 import { COINTOSS_ABI } from "@/app/abi";
 import { getProfileInfo, getFrameUrl, parseDate } from "@/app/utils";
 import { Button } from "frames.js/next";
+import CreatedBy from "@/app/components/createdBy";
 
 const handleRequest = frames(async (ctx) => {
   const url = new URL(ctx.request.url);
@@ -164,36 +165,7 @@ const handleRequest = frames(async (ctx) => {
               </p>
             </div>
           </div>
-          <div tw="absolute bottom-[54px] left-[64px] h-[90px] w-full flex flex-row items-center space-x-8">
-            {userProfile?.avatar ? (
-              <img
-                src={userProfile.avatar}
-                tw="h-[72px] w-[72px] rounded-full"
-              />
-            ) : (
-              <div tw="h-[72px] w-[72px] rounded-full bg-gray-200 flex" />
-            )}
-            <div tw="flex flex-col items-start ml-2">
-              <p tw="text-[26px] flex flex-col">
-                <span
-                  tw="font-bold ml-2"
-                  style={{
-                    fontFamily: "Overpass-Bold",
-                    fontWeight: 700,
-                  }}>
-                  Created by {userProfile?.preferredName}
-                </span>
-                <span
-                  tw="font-bold ml-2"
-                  style={{
-                    fontFamily: "Overpass-Regular",
-                    fontWeight: 400,
-                  }}>
-                  Ends {readableDate}
-                </span>
-              </p>
-            </div>
-          </div>
+          <CreatedBy userProfile={userProfile} readableDate={readableDate} />
         </img>
       </div>
     ),

@@ -1,17 +1,51 @@
 import { v4 as uuidv4 } from "uuid";
-import { HandlerContext } from "@xmtp/message-kit";
+import { skillAction, XMTPContext, getUserInfo } from "@xmtp/message-kit";
 import { privateKeyToAccount } from "viem/accounts";
 import { GROUP_MESSAGE_FIRST } from "../lib/constants.js";
 import { base } from "viem/chains";
 import { getRedisClient } from "../lib/redis.js";
 import { db } from "../lib/db.js";
 import { createPublicClient, createWalletClient, http, parseUnits } from "viem";
-import { COINTOSSBOT_ABI } from "../abi/index.js";
+import { COINTOSSBOT_ABI } from "../lib/abi.js";
+import { frameUrl } from "../index.js";
 
-export function getFrameUrl() {
-  return process.env.FRAME_URL || "http://localhost:3000";
-}
-export async function handleTossCreation(context: HandlerContext) {
+export const registerSkill: skillAction[] = [
+  {
+    skill:
+      "/toss [description] [options (separated by comma)] [amount] [judge(optional)] [endTime(optional)]",
+    description:
+      "Create a toss with a description, options, amount and judge(optional).",
+    handler: handleTossCreation,
+    examples: [
+      "/toss 'Shane vs John at pickeball' 'Yes,No' 10",
+      "/toss 'Will argentina win the world cup' 'Yes,No' 10",
+      "/toss 'Race to the end' 'Fabri,John' 10 @fabri",
+      "/toss 'Will argentina win the world cup' 'Yes,No' 5 '27 Oct 2023 23:59:59 GMT'",
+      "/toss 'Will the niks win on sunday?' 'Yes,No' 10 vitalik.eth '27 Oct 2023 23:59:59 GMT'",
+      "/toss 'Will it rain tomorrow' 'Yes,No' 0",
+    ],
+    params: {
+      description: {
+        type: "quoted",
+      },
+      options: {
+        default: "Yes, No",
+        type: "quoted",
+      },
+      amount: {
+        type: "number",
+      },
+      judge: {
+        type: "username",
+      },
+      endTime: {
+        type: "quoted",
+      },
+    },
+  },
+];
+
+export async function handleTossCreation(context: XMTPContext) {
   const {
     message: {
       content: { params },
@@ -21,16 +55,28 @@ export async function handleTossCreation(context: HandlerContext) {
   } = context;
 
   if (params.description && params.options && !isNaN(Number(params.amount))) {
-    await context.send("one sec...");
-
+    //await context.send("one sec...");
+    let judge = params.judge ?? sender.address;
+    if (params.judge) {
+      judge = await getUserInfo(params.judge);
+      console.log("Judge", judge);
+    }
+    console.log(
+      "Creating toss...",
+      context,
+      params.options,
+      params.amount,
+      params.description,
+      judge?.address,
+      params?.endTime,
+    );
     const tossId = await createToss(
       context,
       params.options,
       params.amount,
       params.description,
-      params.judge ?? sender.address,
-      group ? group.id : sender.address,
-      params.endTime || undefined,
+      judge?.address,
+      params?.endTime,
     );
     if (tossId !== undefined) {
       await db?.read();
@@ -39,10 +85,11 @@ export async function handleTossCreation(context: HandlerContext) {
         await context.send(GROUP_MESSAGE_FIRST);
         await db.write();
       } else {
-        await context.send(`Here is your toss!`);
+        await context.send(
+          `Here is your toss!\n${frameUrl}/frames/toss/${tossId}`,
+        );
       }
-      await context.send(`${getFrameUrl()}/frames/toss/${tossId}`);
-      console.log("Toss created", tossId);
+      //await context.send(`${frameUrl}/frames/toss/${tossId}`);
     } else {
       await context.send(
         `An error occurred while creating the toss. ${JSON.stringify(tossId)}`,
@@ -52,13 +99,12 @@ export async function handleTossCreation(context: HandlerContext) {
 }
 
 export const createToss = async (
-  context: HandlerContext,
+  context: XMTPContext,
   options: string,
   amount: string,
   description: string,
   judge: string,
-  groupid: string,
-  endTime?: string,
+  endTime?: string | bigint,
 ) => {
   try {
     const amountString = `${amount}`;
@@ -85,17 +131,19 @@ export const createToss = async (
     const parsedAmount = BigInt(parseUnits(amountString, 6));
 
     if (endTime) {
-      const date = new Date(endTime); // Example date
-      const timestamp = Math.floor(date.getTime() / 1000); // Convert to Unix timestamp
+      const date = new Date(endTime as string);
+      const timestamp = Math.floor(date.getTime() / 1000);
       if (isNaN(timestamp)) {
         console.error("Invalid endTime provided:", endTime);
-        return {
-          message: "Invalid endTime",
-          code: 400,
-        };
+        // Fix: Correctly set a default endTime if the provided one is invalid
+        endTime = BigInt(Math.floor(new Date().getTime() / 1000) + 34 * 60);
+      } else {
+        endTime = BigInt(timestamp);
       }
+    } else {
+      // Fix: Set a default endTime if none is provided
+      endTime = BigInt(Math.floor(new Date().getTime() / 1000) + 34 * 60);
     }
-
     const createTossTx = await walletClient.writeContract({
       account: account,
       abi: COINTOSSBOT_ABI,
@@ -106,7 +154,7 @@ export const createToss = async (
         description as string,
         (options as string).split(","),
         [parsedAmount, parsedAmount],
-        endTime ? BigInt(endTime) : BigInt(0),
+        endTime,
         BigInt(0),
       ],
     });
