@@ -21,7 +21,6 @@ export const TOSS_OPTIONS_ERROR_REPLY =
   "Please enter at least two valid options, “,” (comma) separated.";
 export const NO_PENDING_TOSSES_ERROR = "You don't have any pending tosses.";
 
-export const GROUP_MESSAGE_FIRST =
-  "Here is your toss! \n\nThe creator of the toss is one who can modify and settle the toss. \n\nThe pool will be split evenly with the winners. \n\nRemember, with great power comes great responsibility!";
+export const GROUP_MESSAGE_FIRST = `\n\nThe creator of the toss is one who can modify and settle the toss. \n\nThe pool will be split evenly with the winners. \n\nRemember, with great power comes great responsibility!`;
 
 export const GROUP_MESSAGE_INITIAL = `Hey everyone! \n\n👋 I’m CoinToss, your friendly bot here to add some fun and excitement to our chats. \n\nStart a toss by tagging me in a yes or no question like "@cointoss Will it rain tomorrow for $10?" and I’ll take care of the rest.`;
