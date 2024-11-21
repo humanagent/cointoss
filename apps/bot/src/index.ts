@@ -1,39 +1,42 @@
-import { run, HandlerContext } from "@xmtp/message-kit";
-import { textGeneration, processMultilineResponse } from "@xmtp/message-kit";
-import { agent_prompt } from "./prompt.js";
-import { getUserInfo } from "@xmtp/message-kit";
+import {
+  run,
+  agentReply,
+  replaceVariables,
+  XMTPContext,
+  SkillGroup,
+} from "@xmtp/message-kit";
+import { systemPrompt } from "./prompt.js";
+import { registerSkill as tossSkill } from "./handlers/toss.js";
+import fs from "fs";
 
-run(async (context: HandlerContext) => {
-  /*All the skills are handled through the skills file*/
-  /* If its just text, it will be handled by the ensAgent*/
-  /* If its a group message, it will be handled by the groupAgent*/
-  if (!process?.env?.OPEN_AI_API_KEY) {
-    console.warn("No OPEN_AI_API_KEY found in .env");
-    return;
-  }
+export const frameUrl = process.env.FRAME_URL || "http://localhost:3000";
+export const ensUrl = "https://app.ens.domains/";
+export const txpayUrl = "https://txpay.vercel.app";
 
-  const {
-    message: {
-      content: { content, params },
-      sender,
-    },
-  } = context;
+export const skills: SkillGroup[] = [
+  {
+    name: "Toss Bot",
+    tag: "@cointoss",
+    description: "Create a coin toss.",
+    skills: [...tossSkill],
+  },
+];
 
-  try {
-    let userPrompt = params?.prompt ?? content;
-    const userInfo = await getUserInfo(sender.address);
-    if (!userInfo) {
-      console.log("User info not found");
-      return;
-    }
-    const { reply } = await textGeneration(
+run(
+  async (context: XMTPContext) => {
+    const {
+      message: { sender },
+      skills,
+    } = context;
+
+    let prompt = await replaceVariables(
+      systemPrompt,
       sender.address,
-      userPrompt,
-      await agent_prompt(userInfo),
+      skills,
+      "@ens",
     );
-    await processMultilineResponse(sender.address, reply, context);
-  } catch (error) {
-    console.error("Error during OpenAI call:", error);
-    await context.send("An error occurred while processing your request.");
-  }
-});
+    fs.writeFileSync("example_prompt.md", prompt);
+    await agentReply(context, prompt);
+  },
+  { skills },
+);
