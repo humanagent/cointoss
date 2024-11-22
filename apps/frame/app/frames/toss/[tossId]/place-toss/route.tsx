@@ -93,7 +93,6 @@ const handleRequest = frames(async (ctx) => {
   let hasHash = false;
   if (ctx.message?.transactionId) {
     const permitHash = ctx.message.transactionId;
-    //    console.log(permitHash, "permitHash", permitId);
 
     const redisClient = await getRedisClient();
     await redisClient.set(permitId, permitHash);

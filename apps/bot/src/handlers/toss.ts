@@ -59,37 +59,32 @@ export async function handleTossCreation(context: XMTPContext) {
     let judge = params.judge ?? sender.address;
     if (params.judge) {
       judge = await getUserInfo(params.judge);
-      console.log("Judge", judge);
     }
     console.log(
       "Creating toss...",
-      context,
       params.options,
       params.amount,
       params.description,
-      judge?.address,
-      params?.endTime,
+      judge?.address ?? sender.address,
+      params?.endTime ?? BigInt(0),
     );
     const tossId = await createToss(
       context,
       params.options,
       params.amount,
       params.description,
-      judge?.address,
-      params?.endTime,
+      judge?.address ?? sender.address,
+      params?.endTime ?? undefined,
     );
     if (tossId !== undefined) {
+      await context.send(`Here is your toss!`);
       await db?.read();
       if (group && !db?.data?.firstToss[group.id]) {
         db.data.firstToss[group.id] = true;
         await context.send(GROUP_MESSAGE_FIRST);
         await db.write();
-      } else {
-        await context.send(
-          `Here is your toss!\n${frameUrl}/frames/toss/${tossId}`,
-        );
       }
-      //await context.send(`${frameUrl}/frames/toss/${tossId}`);
+      await context.send(`${frameUrl}/frames/toss/${tossId}`);
     } else {
       await context.send(
         `An error occurred while creating the toss. ${JSON.stringify(tossId)}`,
