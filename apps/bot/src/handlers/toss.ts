@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { skillAction, XMTPContext, getUserInfo } from "@xmtp/message-kit";
+import { Skill, XMTPContext, getUserInfo } from "@xmtp/message-kit";
 import { privateKeyToAccount } from "viem/accounts";
 import { GROUP_MESSAGE_FIRST } from "../lib/constants.js";
 import { base } from "viem/chains";
@@ -9,7 +9,7 @@ import { createPublicClient, createWalletClient, http, parseUnits } from "viem";
 import { COINTOSSBOT_ABI } from "../lib/abi.js";
 import { frameUrl } from "../index.js";
 
-export const registerSkill: skillAction[] = [
+export const toss: Skill[] = [
   {
     skill:
       "/toss [description] [options (separated by comma)] [amount] [judge(optional)] [endTime(optional)]",

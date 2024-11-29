@@ -7,7 +7,7 @@
     "build": "tsc",
     "clean": "rm -rf .turbo && rm -rf node_modules && yarn clean:lib",
     "clean:lib": "rm -rf dist",
-    "dev": "tsc -w & sleep 1 && node --watch --no-deprecation dist/index.js",
+    "dev": "tsc -w & sleep 1 && NODE_NO_WARNINGS=1 node --watch --no-deprecation dist/index.js",
     "format": "yarn format:base -w .",
     "format:base": "prettier --ignore-path ../../.gitignore",
     "format:check": "yarn format:base -c .",
@@ -18,10 +18,9 @@
   },
   "dependencies": {
     "@redis/client": "^1.6.0",
-    "@xmtp/message-kit": "1.1.10-beta.5",
-    "openai": "^4.58.1",
-    "uuid": "^10.0.0",
-    "viem": "^2.18.7"
+    "@xmtp/message-kit": "1.2.8",
+    "lowdb": "^7.0.1",
+    "uuid": "^10.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.14.2",

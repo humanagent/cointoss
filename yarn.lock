@@ -2251,13 +2251,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xmtp/content-type-group-updated@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "@xmtp/content-type-group-updated@npm:1.0.0"
+"@xmtp/content-type-group-updated@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "@xmtp/content-type-group-updated@npm:1.0.1"
   dependencies:
-    "@xmtp/content-type-primitives": "npm:^1.0.1"
-    "@xmtp/proto": "npm:^3.71.0"
-  checksum: 10/d84a93c51f7fc0cf92832f3cdaec1e34e2ad72001748f9a59eec4aacdb8104b21c13577029233ce21d89aa1a0046a3020c06a67bd3b4b7525f070b0711a050be
+    "@xmtp/content-type-primitives": "npm:^1.0.3"
+    "@xmtp/proto": "npm:^3.72.0"
+  checksum: 10/b1f52da4cdef9423c57faf56fe60684352fd07600889a7a4d5236271ff96556b60db91f1c00fd82332e1d726d3f76d45cc5fabb02daa85c969227dd53a7ba575
   languageName: node
   linkType: hard
 
@@ -2318,6 +2318,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@xmtp/content-type-text@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "@xmtp/content-type-text@npm:1.0.1"
+  dependencies:
+    "@xmtp/content-type-primitives": "npm:^1.0.3"
+  checksum: 10/574fa2f108b815fc7a8d9a29f0358b3aec2f164b5effd505a97ad54556296db207b17f2370604d953f4e50c2807516fe6ad86761dfe2c904a31b8fa77e0b4d6b
+  languageName: node
+  linkType: hard
+
 "@xmtp/frames-validator@npm:^0.6.2":
   version: 0.6.2
   resolution: "@xmtp/frames-validator@npm:0.6.2"
@@ -2345,9 +2354,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xmtp/message-kit@npm:1.1.10-beta.5":
-  version: 1.1.10-beta.5
-  resolution: "@xmtp/message-kit@npm:1.1.10-beta.5"
+"@xmtp/message-kit@npm:1.2.8":
+  version: 1.2.8
+  resolution: "@xmtp/message-kit@npm:1.2.8"
   dependencies:
     "@types/node": "npm:^20.14.2"
     "@vitest/coverage-v8": "npm:^2.1.4"
@@ -2357,34 +2366,34 @@ __metadata:
     "@xmtp/content-type-reply": "npm:^1.1.11"
     "@xmtp/content-type-text": "npm:^1.0.0"
     "@xmtp/grpc-api-client": "npm:^0.2.8"
-    "@xmtp/node-sdk": "npm:^0.0.24"
+    "@xmtp/node-sdk": "npm:^0.0.28"
     "@xmtp/xmtp-js": "npm:^13.0.3"
     dotenv: "npm:^16.4.5"
     openai: "npm:^4.52.7"
     typescript: "npm:^5.4.5"
     viem: "npm:^2.16.3"
     vitest: "npm:^2.1.4"
-  checksum: 10/8d11171031dcf3402eab21174cfed4d33bb6a43d8be4454ec038d2bcf2f7a0db446b9b12b37c01d9f2607bd983ef566c56c1ee17d718bd84454c9963a7bf3acd
+  checksum: 10/0b07489caa1bc7146914e1a440a4d9874cf10bbb45652a9c228ece5c4df7dede4ac53803266325f1eec4106b482368e9b2c490f09a21b1e0fb7199d7a759b5d2
   languageName: node
   linkType: hard
 
-"@xmtp/node-bindings@npm:^0.0.18":
-  version: 0.0.18
-  resolution: "@xmtp/node-bindings@npm:0.0.18"
-  checksum: 10/5cca0748f163728c013ff17cf7fba81a64a7a6029a9782c6b568fd1044940c8ae641110f0a187ee2ac7787f303552712ebe1d5c515c5dad4dc0baa31506d8b83
+"@xmtp/node-bindings@npm:^0.0.25":
+  version: 0.0.25
+  resolution: "@xmtp/node-bindings@npm:0.0.25"
+  checksum: 10/336f9b2a4a8b2781f6c53a7dd444428893f5e04a927350c82fcb79e37e0cc69abcb86406ffedeaa28115f1b57801890309546a10c9e806e3ed81b18b9d8f1431
   languageName: node
   linkType: hard
 
-"@xmtp/node-sdk@npm:^0.0.24":
-  version: 0.0.24
-  resolution: "@xmtp/node-sdk@npm:0.0.24"
+"@xmtp/node-sdk@npm:^0.0.28":
+  version: 0.0.28
+  resolution: "@xmtp/node-sdk@npm:0.0.28"
   dependencies:
-    "@xmtp/content-type-group-updated": "npm:^1.0.0"
-    "@xmtp/content-type-primitives": "npm:^1.0.2"
-    "@xmtp/content-type-text": "npm:^1.0.0"
-    "@xmtp/node-bindings": "npm:^0.0.18"
-    "@xmtp/proto": "npm:^3.62.1"
-  checksum: 10/0da87b706b05e36fca5e92564364f0d6b4e9b9944c0c318c3b626b215b86a990c28a0b1988619b86af1e80203c977607e5f1bfc79ff3f336905b422b59cadadc
+    "@xmtp/content-type-group-updated": "npm:^1.0.1"
+    "@xmtp/content-type-primitives": "npm:^1.0.3"
+    "@xmtp/content-type-text": "npm:^1.0.1"
+    "@xmtp/node-bindings": "npm:^0.0.25"
+    "@xmtp/proto": "npm:^3.72.3"
+  checksum: 10/86f0d601ae65873b71561aa37a60a8709a9aaee0f0020f3590a1149f10bbe4394d1bc5fd97e4e9c30eb5ec7d544eb33de3dcc6fb8e9cbcbae152ac7cd746ef7c
   languageName: node
   linkType: hard
 
@@ -2412,7 +2421,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xmtp/proto@npm:^3.24.0, @xmtp/proto@npm:^3.61.1, @xmtp/proto@npm:^3.62.1, @xmtp/proto@npm:^3.68.0, @xmtp/proto@npm:^3.71.0":
+"@xmtp/proto@npm:^3.24.0, @xmtp/proto@npm:^3.61.1, @xmtp/proto@npm:^3.68.0":
   version: 3.72.0
   resolution: "@xmtp/proto@npm:3.72.0"
   dependencies:
@@ -2433,6 +2442,18 @@ __metadata:
     rxjs: "npm:^7.8.0"
     undici: "npm:^5.8.1"
   checksum: 10/1d743d810ba3b462d7b981e6a01f11a114a4e3c0d5e9fc6499702b2337c53453bdf6a5ce7325d1cf1f58bfefd4bc7bb82f926735bba3abd0bbad0a6fa17f6128
+  languageName: node
+  linkType: hard
+
+"@xmtp/proto@npm:^3.72.3":
+  version: 3.72.3
+  resolution: "@xmtp/proto@npm:3.72.3"
+  dependencies:
+    long: "npm:^5.2.0"
+    protobufjs: "npm:^7.0.0"
+    rxjs: "npm:^7.8.0"
+    undici: "npm:^5.8.1"
+  checksum: 10/fc2f1ff57527a09eff400bef96dfd870790201893746270a13bad35d94d5f3166cf4a527ed955c05f0341ecd8e156c4421869b522789b6800840b17989cb1098
   languageName: node
   linkType: hard
 
@@ -3446,14 +3467,12 @@ __metadata:
     "@types/node": "npm:^20.14.2"
     "@types/timestring": "npm:^6.0.5"
     "@types/uuid": "npm:^10.0.0"
-    "@xmtp/message-kit": "npm:1.1.10-beta.5"
+    "@xmtp/message-kit": "npm:1.2.8"
     lowdb: "npm:^7.0.1"
-    openai: "npm:^4.58.1"
     prettier: "npm:^3.3.3"
     prettier-plugin-packagejson: "npm:^2.5.2"
     typescript: "npm:^5.4.5"
     uuid: "npm:^10.0.0"
-    viem: "npm:^2.18.7"
   languageName: unknown
   linkType: soft
 
@@ -6608,28 +6627,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openai@npm:^4.58.1":
-  version: 4.71.1
-  resolution: "openai@npm:4.71.1"
-  dependencies:
-    "@types/node": "npm:^18.11.18"
-    "@types/node-fetch": "npm:^2.6.4"
-    abort-controller: "npm:^3.0.0"
-    agentkeepalive: "npm:^4.2.1"
-    form-data-encoder: "npm:1.7.2"
-    formdata-node: "npm:^4.3.2"
-    node-fetch: "npm:^2.6.7"
-  peerDependencies:
-    zod: ^3.23.8
-  peerDependenciesMeta:
-    zod:
-      optional: true
-  bin:
-    openai: bin/cli
-  checksum: 10/fa825f6d59443d6989d806f3e939be5f331ee0463d29f7627f1dbf9594b311f5e515759346ce491214aa336033e26b77ee571e7faebe1aa291baa52b70ea0e69
-  languageName: node
-  linkType: hard
-
 "optionator@npm:^0.8.1":
   version: 0.8.3
   resolution: "optionator@npm:0.8.3"
@@ -8931,7 +8928,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"viem@npm:^2.16.3, viem@npm:^2.16.5, viem@npm:^2.17.0, viem@npm:^2.18.7, viem@npm:^2.7.8":
+"viem@npm:^2.16.3, viem@npm:^2.16.5, viem@npm:^2.17.0, viem@npm:^2.7.8":
   version: 2.21.42
   resolution: "viem@npm:2.21.42"
   dependencies:
